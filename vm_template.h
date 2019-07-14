@@ -195,10 +195,10 @@ namespace vm
             // Current instruction pointer.
             register_size<reg_pointer> reg_ip;
             // Random registers for storage.
-            register_size<reg_pointer> reg_store[num_of_storage_registers];
+            register_size<reg_pointer> reg_strg[num_of_storage_registers];
             // Registers for mathematical expression.
-            register_size<reg_double> reg_double[num_of_storage_registers];
-            register_size<reg_float> reg_float[num_of_storage_registers];
+            register_size<reg_double> reg_dbl[num_of_storage_registers];
+            register_size<reg_float> reg_flt[num_of_storage_registers];
             // Flag is used to know if previous condition was true or false.
             bool m_bFlag;
 
