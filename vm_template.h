@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include <stddef.h>
+#include <assert.h>
 
 namespace vm
 {
@@ -53,7 +54,7 @@ namespace vm
         reg_pop_pointer,
         // Call instruction.
         reg_call,
-        // Read & write function
+        // Read & write function to the "usable memory"
         reg_read,
         reg_write
     } instructions_t;
@@ -141,7 +142,7 @@ namespace vm
     class Program
     {
      public:
-        Program(array_t* bin, uintptr_t entryPoint);
+        Program(array_t* binaryFile);
 
         void parseHeader();
         void callEntryPoint();
@@ -150,18 +151,20 @@ namespace vm
         array_t* instructions;
     };
 
-    template <size_t ram_size = default_ram_size,
-              size_t stack_size = default_stack_size>
+    template <size_t ram_size = default_ram_size>
     class VirtualMachine
     {
      public:
         VirtualMachine();
+
+        void checkStack();
 
         // Number of storage registers.
         typedef enum
         {
             register_storage_first,
             register_storage_second,
+            register_storage_third,
             num_of_storage_registers
 
         } register_storage_t;
@@ -194,6 +197,7 @@ namespace vm
         static constexpr auto cpu_regs_size = sizeof(cpu_registers_t);
 
         byte_t m_RAM[ram_size];
+        uintptr_t m_ptrUsableMemory;
     };
 
 };
