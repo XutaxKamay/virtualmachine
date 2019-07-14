@@ -617,7 +617,7 @@ namespace vm
 
             if (type1 != type2)
             {
-                assert("Adding variable of not the same type");
+                assert("Register isn't the same type");
             }
 
             bool bDone = false;
@@ -721,7 +721,7 @@ namespace vm
 
             if (type1 != type2)
             {
-                assert("Adding variable of not the same type");
+                assert("Register isn't the same type");
             }
 
             bool bDone = false;
@@ -825,7 +825,7 @@ namespace vm
 
             if (type1 != type2)
             {
-                assert("Adding variable of not the same type");
+                assert("Register isn't the same type");
             }
 
             bool bDone = false;
@@ -929,7 +929,7 @@ namespace vm
 
             if (type1 != type2)
             {
-                assert("Adding variable of not the same type");
+                assert("Register isn't the same type");
             }
 
             bool bDone = false;
