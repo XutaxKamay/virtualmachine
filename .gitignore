@@ -1,1 +1,4 @@
 *.creator.user
+*.out
+*.so
+*.o
