@@ -6,6 +6,7 @@
 #include <cassert>
 #include <iostream>
 #include <type_traits>
+#include <cstring>
 
 namespace vm
 {
@@ -67,11 +68,11 @@ namespace vm
         reg_float,
         reg_double,
         reg_pointer
-    } registers_size_t;
+    } registers_type_t;
 
     // Get register size from an enum.
-    template <registers_size_t reg>
-    inline constexpr auto _register_size()
+    template <registers_type_t reg>
+    inline constexpr auto _rt()
     {
         if constexpr (reg == reg_float)
         {
@@ -89,21 +90,23 @@ namespace vm
         static_assert("Unknown register size");
     };
 
-    template <registers_size_t reg>
-    using register_size = typename decltype(_register_size<reg>())::type;
+    template <registers_type_t reg>
+    using rt = typename decltype(_rt<reg>())::type;
+    template <registers_type_t reg>
+    using rt = rt<reg>;
 
     template <typename T>
-    inline constexpr auto _register_type()
+    inline constexpr auto _register_nb()
     {
-        if constexpr (std::is_same<T, register_size<reg_float>>::value)
+        if constexpr (std::is_same<T, rt<reg_float>>::value)
         {
             return reg_float;
         }
-        else if constexpr (std::is_same<T, register_size<reg_double>>::value)
+        else if constexpr (std::is_same<T, rt<reg_double>>::value)
         {
             return reg_double;
         }
-        else if constexpr (std::is_same<T, register_size<reg_pointer>>::value)
+        else if constexpr (std::is_same<T, rt<reg_pointer>>::value)
         {
             return reg_pointer;
         }
@@ -112,56 +115,143 @@ namespace vm
     }
 
     template <typename T>
-    constexpr auto register_type = _register_type<T>();
+    inline constexpr auto register_nb = _register_nb<T>();
 
     // Program sections.
     typedef struct
     {
-        uintptr_t m_ptrBegin;
-        uintptr_t m_ptrEnd;
-    } program_section_t;
+        uintptr_t m_pBegin;
+        size_t m_size;
+    } section_t;
+
+    typedef enum
+    {
+        section_code,
+        section_data,
+        section_max
+    } sections_nb_t;
 
     // Program header.
-    template <typename ret_t, typename... args_t>
     class ProgramHeader
     {
      public:
-        typedef ret_t (*entrypoint_t)(args_t...);
+        ProgramHeader();
 
-        ProgramHeader(uintptr_t entryPoint);
-
-        enum
-        {
-            section_code,
-            section_data,
-            section_max
-        };
+        template <sections_nb_t section_nb>
+        section_t* getSection();
 
         // Entry point of the program.
-        entrypoint_t m_entryPoint;
-        program_section_t m_sections[section_max];
+        ptr_t m_entryPoint;
+        // Sections.
+        section_t* m_sections[section_max];
     };
 
-    template <typename ret_t, typename... args_t>
+    // Program execution.
     class Program
     {
      public:
-        Program(array_t* binaryFile);
+        Program(array_t* binaryStub);
+        ptr_t getEntryPoint();
 
-        void parseHeader();
-        void callEntryPoint();
-
-        ProgramHeader<ret_t, args_t...> m_header;
-        array_t* instructions;
+        // Header.
+        ProgramHeader* m_header;
     };
 
-    template <size_t ram_size = default_ram_size>
+    // Write program template to write programs...
+    template <typename ret_t, typename... args_t>
+    class ProgramWrite : public Program
+    {
+     public:
+        using entrypoint_t = ret_t (*)(args_t...);
+
+        ProgramWrite(size_t maxSize) : m_writeSize(0), m_maxSize(maxSize)
+        {
+            for (auto section = 0; section < section_max; section++)
+            {
+                m_bSectionComplete[section] = false;
+            }
+        }
+
+        void processSectionEP()
+        {}
+
+        size_t m_writeSize;
+        size_t m_maxSize;
+        bool m_bSectionComplete[section_max];
+    };
+
+    template <auto ram_size = default_ram_size>
     class VirtualMachine
     {
      public:
-        VirtualMachine();
+        VirtualMachine() : m_pUsableMemory(0), m_bPaused(true)
+        {
+            init();
+        }
 
-        void checkStack();
+        auto init()
+        {
+            // Calculate the stack size, we will assume that it is only 1/8 of
+            // the RAM.
+            constexpr auto stack_size = 8 / ram_size;
+            // Reset cpu.
+            memset(&m_CPU, 0, sizeof(cpu_registers_t));
+
+            // Setup stack pointers.
+            m_CPU.reg_bp = reinterpret_cast<rt<reg_pointer>>(m_RAM);
+            m_CPU.reg_cp = m_CPU.reg_bp;
+
+            // Usable memory setup.
+            m_pUsableMemory = reinterpret_cast<uintptr_t>(m_RAM) + stack_size;
+        }
+
+        auto runProgram(Program* program)
+        {
+            init();
+
+            m_bPaused = false;
+
+            m_CPU.reg_ip = m_pUsableMemory + reinterpret_cast<uintptr_t>(
+                                                 program->getEntryPoint());
+
+            auto programCode = program->m_header->getSection<section_code>();
+
+            auto imageBase = reinterpret_cast<uintptr_t>(program->m_header);
+
+            m_sectionCode.m_pBegin = m_pUsableMemory + programCode->m_pBegin;
+            m_sectionCode.m_size = programCode->m_size;
+
+            auto programData = program->m_header->getSection<section_data>();
+
+            m_sectionData.m_pBegin = m_pUsableMemory + programData->m_pBegin;
+            m_sectionData.m_size = programData->m_size;
+
+            // Copy sections to RAM.
+            memcpy(reinterpret_cast<ptr_t>(imageBase + programCode->m_pBegin),
+                   reinterpret_cast<ptr_t>(m_sectionCode.m_pBegin),
+                   m_sectionCode.m_size);
+
+            memcpy(reinterpret_cast<ptr_t>(imageBase + programCode->m_pBegin),
+                   reinterpret_cast<ptr_t>(m_sectionData.m_pBegin),
+                   m_sectionData.m_size);
+
+            run();
+        }
+
+        auto run()
+        {}
+
+        auto checkStack()
+        {
+            if (m_CPU.reg_cp >= m_pUsableMemory ||
+                m_CPU.reg_bp >= m_pUsableMemory)
+            {
+                assert("Exceeding the stack.");
+            }
+        }
+
+        auto checkCode()
+        {}
 
         // Number of storage registers.
         typedef enum
@@ -187,31 +277,36 @@ namespace vm
         typedef struct
         {
             // Register of return value.
-            register_size<reg_pointer> reg_ret;
+            rt<reg_pointer> reg_ret;
             // Base stack pointer.
-            register_size<reg_pointer> reg_bp;
+            rt<reg_pointer> reg_bp;
             // Current stack pointer.
-            register_size<reg_pointer> reg_cp;
+            rt<reg_pointer> reg_cp;
             // Current instruction pointer.
-            register_size<reg_pointer> reg_ip;
+            rt<reg_pointer> reg_ip;
             // Random registers for storage.
-            register_size<reg_pointer> reg_strg[num_of_storage_registers];
+            rt<reg_pointer> reg_strg[num_of_storage_registers];
             // Registers for mathematical expression.
-            register_size<reg_double> reg_dbl[num_of_storage_registers];
-            register_size<reg_float> reg_flt[num_of_storage_registers];
+            rt<reg_double> reg_dbl[num_of_storage_registers];
+            rt<reg_float> reg_flt[num_of_storage_registers];
             // Flag is used to know if previous condition was true or false.
             bool m_bFlag;
 
         } cpu_registers_t;
 
         // CPU Registers.
-        cpu_registers_t m_CPURegs;
+        cpu_registers_t m_CPU;
         // RAM.
         byte_t m_RAM[ram_size];
         // Usable memory is after the stack,
         // so we won't write to the stack directly.
         // Usable memory = RAM + stack_size.
-        uintptr_t m_ptrUsableMemory;
+        uintptr_t m_pUsableMemory;
+        // Code in RAM.
+        section_t m_sectionCode;
+        // Data in RAM.
+        section_t m_sectionData;
+        bool m_bPaused;
     };
 
 };

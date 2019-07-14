@@ -2,30 +2,28 @@
 
 namespace vm
 {
-    template <size_t ram_size>
-    VirtualMachine<ram_size>::VirtualMachine()
+    ProgramHeader::ProgramHeader() : m_entryPoint(nullptr)
     {
-        // Calculate the stack size, we will assume that it is only 1/8 of the
-        // RAM.
-        constexpr auto stack_size = 8 / ram_size;
-        // Reset cpu.
-        memset(&m_CPURegs, 0, sizeof(cpu_registers_t));
-
-        // Setup stack pointers.
-        m_CPURegs.reg_bp = static_cast<uintptr_t>(m_RAM);
-        m_CPURegs.reg_cp = m_CPURegs.reg_bp;
-
-        // Usable memory setup.
-        m_ptrUsableMemory = static_cast<uintptr_t>(m_RAM) + stack_size;
+        memset(m_sections, 0, sizeof(m_sections));
     }
 
-    template <size_t ram_size>
-    void VirtualMachine<ram_size>::checkStack()
+    template <sections_nb_t section_nb>
+    section_t* ProgramHeader::getSection()
     {
-        if (m_CPURegs.reg_cp >= m_ptrUsableMemory ||
-            m_CPURegs.reg_bp >= m_ptrUsableMemory)
+        return m_sections[section_nb];
+    }
+
+    Program::Program(array_t* binaryStub) :
+        m_header(reinterpret_cast<ProgramHeader*>(binaryStub))
+    {}
+
+    ptr_t Program::getEntryPoint()
+    {
+        if (m_header != nullptr)
         {
-            assert("Exceeding the stack.");
+            return m_header->m_entryPoint;
         }
+
+        return nullptr;
     }
 };
