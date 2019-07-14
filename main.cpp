@@ -3,6 +3,5 @@ using namespace vm;
 
 auto main() -> int
 {
-    VirtualMachine virtualMachine;
-
+    ProgramWrite programWrite;
 }

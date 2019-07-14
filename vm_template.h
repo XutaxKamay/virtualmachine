@@ -6,7 +6,9 @@
 #include <cassert>
 #include <iostream>
 #include <type_traits>
+#include <vector>
 #include <cstring>
+#include <regex>
 
 // Check GCC
 #if __GNUC__
@@ -27,8 +29,7 @@
 
 namespace vm
 {
-    constexpr auto default_ram_size = 1 << 24;
-    constexpr auto default_stack_size = 1 << 20;
+    constexpr auto default_ram_size = 1 << 25;
 
     typedef void* ptr_t;
     typedef uint8_t byte_t;
@@ -74,8 +75,10 @@ namespace vm
         reg_pop_32,
         reg_pop_64,
         reg_pop_pointer,
-        // jmp instruction.
+        // Jump instruction.
         reg_jmp,
+        // Call instruction.
+        reg_call,
         // Return instruction.
         reg_ret,
         // Read & write function to the "usable memory"
@@ -83,6 +86,8 @@ namespace vm
         reg_write,
         // Set return value address.
         reg_set_ret,
+        // Set value of register.
+        reg_set_value,
         // Exit machine,
         reg_exit
     } instructions_t;
@@ -190,7 +195,7 @@ namespace vm
         {
             return get_type<uint64_t>;
         }
-        if constexpr (reg == reg_8_s)
+        else if constexpr (reg == reg_8_s)
         {
             return get_type<int8_t>;
         }
@@ -250,16 +255,20 @@ namespace vm
     inline constexpr auto register_nb = _register_nb<T>();
 
     // Program sections.
-    typedef struct
+    class section_t
     {
-        uintptr_t m_pBegin;
+     public:
+        // Relative offset of where the section begin.
+        uintptr_t m_pRBegin;
+        // Size of the section.
         size_t m_size;
-    } section_t;
+    };
 
     typedef enum
     {
         section_code,
         section_data,
+        section_relocs,
         section_max
     } sections_nb_t;
 
@@ -275,13 +284,14 @@ namespace vm
         // Entry point of the program.
         ptr_t m_entryPoint;
         // Sections.
-        section_t* m_sections[section_max];
+        section_t m_sections[section_max];
     };
 
     // Program execution.
     class Program
     {
      public:
+        Program();
         Program(array_t* binaryStub);
         ptr_t getEntryPoint();
 
@@ -295,25 +305,42 @@ namespace vm
         size_t size;
     } program_arguments_t;
 
-    // Write program template to write programs...
+    // WriteProgram to write programs...
     class ProgramWrite : public Program
     {
      public:
-        size_t m_writeSize;
-        size_t m_maxSize;
-        bool m_bSectionComplete[section_max];
+        ProgramWrite();
+        ~ProgramWrite();
+
+        auto create();
+        auto insertInstructions(std::vector<byte_t> instructions);
+        auto insertReloc(uintptr_t reloc);
+        auto insertData(std::vector<byte_t> data);
+        auto setEntryPoint(ptr_t entryPoint);
+
+        std::vector<byte_t> m_instructions;
+        std::vector<byte_t> m_data;
+        std::vector<uintptr_t> m_relocs;
     };
 
-    template <auto ram_size = default_ram_size>
+    // Convert our own programming language to own CPU instructions.
+    class Compiler
+    {
+     public:
+    };
+
+    template <size_t ram_size = default_ram_size>
     class VirtualMachine
     {
      public:
         typedef union
         {
+            // Unsigned
             rt<reg_8> b[8];
             rt<reg_16> s[4];
             rt<reg_32> i[2];
             rt<reg_64> l;
+            // Signed
             rt<reg_8_s> b_s[8];
             rt<reg_16_s> s_s[4];
             rt<reg_32_s> i_s[2];
@@ -331,6 +358,8 @@ namespace vm
             // Base stack pointer.
             rt<reg_pointer> reg_bp;
             // Current stack pointer.
+            rt<reg_pointer> reg_sp;
+            // Current call stack pointer.
             rt<reg_pointer> reg_cp;
             // Current instruction pointer.
             rt<reg_pointer> reg_ip;
@@ -368,15 +397,24 @@ namespace vm
             // Reset cpu.
             memset(&m_CPU, 0, sizeof(cpu_registers_t));
 
-            // Setup stack pointers.
-            m_CPU.reg_bp = reinterpret_cast<rt<reg_pointer>>(m_RAM);
-            m_CPU.reg_cp = m_CPU.reg_bp;
-
             // Usable memory setup.
-            m_pUsableMemory = reinterpret_cast<uintptr_t>(m_RAM) + stack_size;
+            m_pUsableMemory = reinterpret_cast<uintptr_t>(m_RAM);
+
+            m_pUsableMemory += stack_size;
+
+            // Setup stack pointer.
+            // This time we will go to the lower address to the highest.
+            m_CPU.reg_bp = m_pUsableMemory;
+            m_CPU.reg_sp = m_CPU.reg_bp;
+            m_pUsableMemory += stack_size;
+
+            // Setup call stack pointer.
+            // Same here.
+            m_CPU.reg_cp = m_pUsableMemory;
+            m_pUsableMemory += stack_size;
         }
 
-        auto runProgram(Program* program, program_arguments_t* args)
+        auto runProgram(Program* program, program_arguments_t* args = nullptr)
         {
             init();
 
@@ -385,34 +423,16 @@ namespace vm
             m_CPU.reg_ip = m_pUsableMemory + reinterpret_cast<uintptr_t>(
                                                  program->getEntryPoint());
 
-            auto programCode = program->m_header->getSection<section_code>();
+            if (args != nullptr)
+            {
+                // Increment the stack.
+                m_CPU.reg_sp += args->size;
 
-            auto imageBase = reinterpret_cast<uintptr_t>(program->m_header);
-
-            m_sectionCode.m_pBegin = m_pUsableMemory + programCode->m_pBegin;
-            m_sectionCode.m_size = programCode->m_size;
-
-            auto programData = program->m_header->getSection<section_data>();
-
-            m_sectionData.m_pBegin = m_pUsableMemory + programData->m_pBegin;
-            m_sectionData.m_size = programData->m_size;
-
-            // Copy sections to RAM.
-            memcpy(reinterpret_cast<ptr_t>(imageBase + programCode->m_pBegin),
-                   reinterpret_cast<ptr_t>(m_sectionCode.m_pBegin),
-                   m_sectionCode.m_size);
-
-            memcpy(reinterpret_cast<ptr_t>(imageBase + programCode->m_pBegin),
-                   reinterpret_cast<ptr_t>(m_sectionData.m_pBegin),
-                   m_sectionData.m_size);
-
-            // Setup the stack for the arguments.
-            memcpy(reinterpret_cast<ptr_t>(m_CPU.reg_cp),
-                   args->data,
-                   args->size);
-
-            // Increment the stack.
-            m_CPU.reg_cp += args->size;
+                // Setup the stack for the arguments.
+                memcpy(reinterpret_cast<ptr_t>(m_CPU.reg_sp),
+                       args->data,
+                       args->size);
+            }
 
             run();
         }
@@ -1028,6 +1048,13 @@ namespace vm
             {
                 instructions_t instruction = readInstruction();
 
+                // Check for errors.
+                if (!checkCode() || !checkStacks())
+                {
+                    bExit = true;
+                    break;
+                }
+
                 switch (instruction)
                 {
                     case reg_add:
@@ -1066,24 +1093,51 @@ namespace vm
                         break;
                     }
 
-                    case reg_exit:
-                        bExit = true;
+                    case reg_set_value:
+                    {
                         break;
+                    }
+
+                    case reg_call:
+                    {
+                        break;
+                    }
+
+                    case reg_ret:
+                    {
+                        break;
+                    }
+
+                    case reg_jmp:
+                    {
+                        m_CPU.reg_ip = m_CPU.reg_strg[determinateRegStrg()].p;
+                        break;
+                    }
+
+                    case reg_set_ret:
+                    {
+                        m_CPU.reg_ret = m_CPU.reg_strg[determinateRegStrg()].p;
+                        break;
+
+                        case reg_exit:
+                            bExit = true;
+                            break;
+                    }
                 }
             }
         }
 
-        auto checkStack()
+        // Check if exceeding the stacks.
+        auto checkStacks()
         {
-            if (m_CPU.reg_cp >= m_pUsableMemory ||
-                m_CPU.reg_bp >= m_pUsableMemory)
-            {
-                assert("Exceeding the stack.");
-            }
+            return true;
         }
 
+        // Check if exceeding the code section.
         auto checkCode()
-        {}
+        {
+            return true;
+        }
     };
 
 };
