@@ -1,9 +1,11 @@
 #ifndef VM_TEMPLATE_H
 #define VM_TEMPLATE_H
 
-#include <stdint.h>
-#include <stddef.h>
-#include <assert.h>
+#include <cstdint>
+#include <cstddef>
+#include <cassert>
+#include <iostream>
+#include <type_traits>
 
 namespace vm
 {
@@ -41,7 +43,7 @@ namespace vm
         // Bitwise operators
         reg_shift_left,
         reg_shift_right,
-        // Stock & remove variables to the stack
+        // Stock & erase registers values to the stack
         reg_push_8,
         reg_push_16,
         reg_push_32,
@@ -62,36 +64,16 @@ namespace vm
     // Let's create some registers type for each data types.
     typedef enum
     {
-        reg_8,
-        reg_16,
-        reg_32,
-        reg_64,
         reg_float,
         reg_double,
         reg_pointer
-    } registers_type_t;
+    } registers_size_t;
 
     // Get register size from an enum.
-    template <registers_type_t reg>
-    inline constexpr auto _register_type()
+    template <registers_size_t reg>
+    inline constexpr auto _register_size()
     {
-        if constexpr (reg == reg_8)
-        {
-            return get_type<uint8_t>;
-        }
-        else if constexpr (reg == reg_16)
-        {
-            return get_type<uint16_t>;
-        }
-        else if constexpr (reg == reg_32)
-        {
-            return get_type<uint32_t>;
-        }
-        else if constexpr (reg == reg_64)
-        {
-            return get_type<uint64_t>;
-        }
-        else if constexpr (reg == reg_float)
+        if constexpr (reg == reg_float)
         {
             return get_type<float>;
         }
@@ -104,11 +86,33 @@ namespace vm
             return get_type<uintptr_t>;
         }
 
-        static_assert("Unknown type of register size");
+        static_assert("Unknown register size");
     };
 
-    template <registers_type_t reg>
-    using register_type = typename decltype(_register_type<reg>())::type;
+    template <registers_size_t reg>
+    using register_size = typename decltype(_register_size<reg>())::type;
+
+    template <typename T>
+    inline constexpr auto _register_type()
+    {
+        if constexpr (std::is_same<T, register_size<reg_float>>::value)
+        {
+            return reg_float;
+        }
+        else if constexpr (std::is_same<T, register_size<reg_double>>::value)
+        {
+            return reg_double;
+        }
+        else if constexpr (std::is_same<T, register_size<reg_pointer>>::value)
+        {
+            return reg_pointer;
+        }
+
+        static_assert("Unknown register type");
+    }
+
+    template <typename T>
+    constexpr auto register_type = _register_type<T>();
 
     // Program sections.
     typedef struct
@@ -162,9 +166,19 @@ namespace vm
         // Number of storage registers.
         typedef enum
         {
-            register_storage_first,
-            register_storage_second,
-            register_storage_third,
+            // Temporary registers.
+            register_storage_temp1,
+            register_storage_temp2,
+            register_storage_temp3,
+            register_storage_temp4,
+            register_storage_temp5,
+            register_storage_temp6,
+            register_storage_temp7,
+            register_storage_temp8,
+            // Registers for reading to usable memory.
+            register_storage_read,
+            // Registers for writing to usable memory.
+            register_storage_write,
             num_of_storage_registers
 
         } register_storage_t;
@@ -173,30 +187,30 @@ namespace vm
         typedef struct
         {
             // Register of return value.
-            register_type<reg_pointer> reg_ret;
+            register_size<reg_pointer> reg_ret;
             // Base stack pointer.
-            register_type<reg_pointer> reg_bp;
+            register_size<reg_pointer> reg_bp;
             // Current stack pointer.
-            register_type<reg_pointer> reg_cp;
+            register_size<reg_pointer> reg_cp;
             // Current instruction pointer.
-            register_type<reg_pointer> reg_ip;
+            register_size<reg_pointer> reg_ip;
             // Random registers for storage.
-            register_type<reg_8> reg_8[num_of_storage_registers];
-            register_type<reg_16> reg_16[num_of_storage_registers];
-            register_type<reg_32> reg_32[num_of_storage_registers];
-            register_type<reg_64> reg_64[num_of_storage_registers];
-            register_type<reg_pointer> reg_pointer[num_of_storage_registers];
+            register_size<reg_pointer> reg_store[num_of_storage_registers];
             // Registers for mathematical expression.
-            register_type<reg_double> reg_double[num_of_storage_registers];
-            register_type<reg_float> reg_float[num_of_storage_registers];
+            register_size<reg_double> reg_double[num_of_storage_registers];
+            register_size<reg_float> reg_float[num_of_storage_registers];
+            // Flag is used to know if previous condition was true or false.
+            bool m_bFlag;
 
         } cpu_registers_t;
 
         // CPU Registers.
         cpu_registers_t m_CPURegs;
-        static constexpr auto cpu_regs_size = sizeof(cpu_registers_t);
-
+        // RAM.
         byte_t m_RAM[ram_size];
+        // Usable memory is after the stack,
+        // so we won't write to the stack directly.
+        // Usable memory = RAM + stack_size.
         uintptr_t m_ptrUsableMemory;
     };
 

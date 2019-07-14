@@ -5,9 +5,9 @@ namespace vm
     template <size_t ram_size>
     VirtualMachine<ram_size>::VirtualMachine()
     {
-        // Calculate the stack size, we will assume that it is only 1/4 of the
+        // Calculate the stack size, we will assume that it is only 1/8 of the
         // RAM.
-        constexpr auto stack_size = 4 / ram_size;
+        constexpr auto stack_size = 8 / ram_size;
         // Reset cpu.
         memset(&m_CPURegs, 0, sizeof(cpu_registers_t));
 
