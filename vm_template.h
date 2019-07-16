@@ -1,14 +1,13 @@
 #ifndef VM_TEMPLATE_H
 #define VM_TEMPLATE_H
-
-#include <cstdint>
-#include <cstddef>
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <cstring>
 #include <iostream>
+#include <regex>
 #include <type_traits>
 #include <vector>
-#include <cstring>
-#include <regex>
 
 // Check GCC
 #if __GNUC__
@@ -29,11 +28,11 @@
 
 namespace vm
 {
-    constexpr auto default_ram_size = 1 << 25;
+    constexpr auto default_ram_size = 0x1000000;
 
-    typedef void* ptr_t;
-    typedef uint8_t byte_t;
-    typedef byte_t* array_t;
+    using ptr_t = void*;
+    using byte_t = uint8_t;
+    using array_t = byte_t*;
 
     // Type wrapper
     template <typename type_t>
@@ -47,53 +46,70 @@ namespace vm
     inline constexpr type_wrapper_t<type_t> get_type {};
 
 #pragma pack(1)
-    typedef enum
+    enum instructions_t
     {
         // Mathematical expressions.
-        reg_add,
-        reg_minus,
-        reg_divide,
-        reg_multiply,
-        reg_equal,
+        inst_add,
+        inst_minus,
+        inst_divide,
+        inst_multiply,
+        inst_equal,
+        inst_mod,
+        // Others operations.
+        inst_xor,
+        inst_and,
+        inst_or,
+        inst_comp,
+        inst_not,
+        inst_sleft,
+        inst_sright,
         // Conditions.
-        reg_condition_lower,
-        reg_condition_higher,
-        reg_condition_equal,
-        reg_condition_or,
-        reg_condition_and,
-        // Bitwise operators
-        reg_shift_left,
-        reg_shift_right,
-        // Stock & erase registers values to the stack
-        reg_push_8,
-        reg_push_16,
-        reg_push_32,
-        reg_push_64,
-        reg_push_pointer,
-        reg_pop_8,
-        reg_pop_16,
-        reg_pop_32,
-        reg_pop_64,
-        reg_pop_pointer,
+        inst_condition_lower,
+        inst_condition_lowerequal,
+        inst_condition_higher,
+        inst_condition_higherequal,
+        inst_condition_equal,
+        inst_condition_or,
+        inst_condition_and,
+        inst_condition_not,
+        // Stock & erase instisters values to the stack
+        inst_push_8,
+        inst_push_16,
+        inst_push_32,
+        inst_push_64,
+        inst_push_pointer,
+        inst_pop_8,
+        inst_pop_16,
+        inst_pop_32,
+        inst_pop_64,
+        inst_pop_pointer,
         // Jump instruction.
-        reg_jmp,
+        inst_jmp,
         // Call instruction.
-        reg_call,
+        inst_call,
         // Return instruction.
-        reg_ret,
+        inst_ret,
         // Read & write function to the "usable memory"
-        reg_read,
-        reg_write,
+        inst_read,
+        inst_write,
         // Set return value address.
-        reg_set_ret,
-        // Set value of register.
-        reg_set_value,
+        inst_set_ret,
+        // Set value of instister.
+        inst_set_value,
         // Exit machine,
-        reg_exit
-    } instructions_t;
+        inst_exit
+    };
+
+    // What kind of operation is applied on, on value or on register.
+    enum operation_type_t
+    {
+        op_value,
+        op_register,
+        op_max
+    };
 
     // Let's create some registers type for each data types.
-    typedef enum
+    enum register_type_t
     {
         reg_8,
         reg_16,
@@ -106,10 +122,10 @@ namespace vm
         reg_float,
         reg_double,
         reg_pointer
-    } register_type_t;
+    };
 
     // Number of storage registers.
-    typedef enum
+    enum register_storage_t
     {
         // Temporary registers.
         register_storage_temp1,
@@ -134,44 +150,44 @@ namespace vm
         register_storage_write,
         num_of_storage_registers
 
-    } register_storage_t;
+    };
 
-    typedef enum
+    enum register_storage_slot_t
     {
-        reg_1_byte,
-        reg_2_byte,
-        reg_3_byte,
-        reg_4_byte,
-        reg_5_byte,
-        reg_6_byte,
-        reg_7_byte,
-        reg_8_byte,
-        reg_1_short,
-        reg_2_short,
-        reg_3_short,
-        reg_4_short,
-        reg_1_int,
-        reg_2_int,
-        reg_1_long,
-        reg_1_byte_s,
-        reg_2_byte_s,
-        reg_3_byte_s,
-        reg_4_byte_s,
-        reg_5_byte_s,
-        reg_6_byte_s,
-        reg_7_byte_s,
-        reg_8_byte_s,
-        reg_1_short_s,
-        reg_2_short_s,
-        reg_3_short_s,
-        reg_4_short_s,
-        reg_1_int_s,
-        reg_2_int_s,
-        reg_1_long_s,
-        reg_1_float,
-        reg_2_float,
-        reg_1_double,
-    } cpu_register_slot_t;
+        slot_1_byte,
+        slot_2_byte,
+        slot_3_byte,
+        slot_4_byte,
+        slot_5_byte,
+        slot_6_byte,
+        slot_7_byte,
+        slot_8_byte,
+        slot_1_short,
+        slot_2_short,
+        slot_3_short,
+        slot_4_short,
+        slot_1_int,
+        slot_2_int,
+        slot_1_long,
+        slot_1_byte_s,
+        slot_2_byte_s,
+        slot_3_byte_s,
+        slot_4_byte_s,
+        slot_5_byte_s,
+        slot_6_byte_s,
+        slot_7_byte_s,
+        slot_8_byte_s,
+        slot_1_short_s,
+        slot_2_short_s,
+        slot_3_short_s,
+        slot_4_short_s,
+        slot_1_int_s,
+        slot_2_int_s,
+        slot_1_long_s,
+        slot_1_float,
+        slot_2_float,
+        slot_1_double
+    };
 
 #pragma pack()
 
@@ -180,49 +196,37 @@ namespace vm
     inline constexpr auto _rt()
     {
         if constexpr (reg == reg_8)
-        {
             return get_type<uint8_t>;
-        }
-        else if constexpr (reg == reg_16)
-        {
+
+        if constexpr (reg == reg_16)
             return get_type<uint16_t>;
-        }
-        else if constexpr (reg == reg_32)
-        {
+
+        if constexpr (reg == reg_32)
             return get_type<uint32_t>;
-        }
-        else if constexpr (reg == reg_64)
-        {
+
+        if constexpr (reg == reg_64)
             return get_type<uint64_t>;
-        }
-        else if constexpr (reg == reg_8_s)
-        {
+
+        if constexpr (reg == reg_8_s)
             return get_type<int8_t>;
-        }
-        else if constexpr (reg == reg_16_s)
-        {
+
+        if constexpr (reg == reg_16_s)
             return get_type<int16_t>;
-        }
-        else if constexpr (reg == reg_32_s)
-        {
+
+        if constexpr (reg == reg_32_s)
             return get_type<int32_t>;
-        }
-        else if constexpr (reg == reg_64_s)
-        {
+
+        if constexpr (reg == reg_64_s)
             return get_type<int64_t>;
-        }
-        else if constexpr (reg == reg_float)
-        {
+
+        if constexpr (reg == reg_float)
             return get_type<float>;
-        }
-        else if constexpr (reg == reg_double)
-        {
+
+        if constexpr (reg == reg_double)
             return get_type<double>;
-        }
-        else if constexpr (reg == reg_pointer)
-        {
+
+        if constexpr (reg == reg_pointer)
             return get_type<uintptr_t>;
-        }
 
         static_assert("Unknown register size");
     };
@@ -239,11 +243,13 @@ namespace vm
         {
             return reg_float;
         }
-        else if constexpr (std::is_same<T, rt<reg_double>>::value)
+
+        if constexpr (std::is_same<T, rt<reg_double>>::value)
         {
             return reg_double;
         }
-        else if constexpr (std::is_same<T, rt<reg_pointer>>::value)
+
+        if constexpr (std::is_same<T, rt<reg_pointer>>::value)
         {
             return reg_pointer;
         }
@@ -264,27 +270,28 @@ namespace vm
         size_t m_size;
     };
 
-    typedef enum
+    enum sections_nb_t
     {
         section_code,
         section_data,
         section_relocs,
         section_max
-    } sections_nb_t;
+    };
 
-    // Program header.
-    class ProgramHeader
+    struct program_header_t
     {
-     public:
-        ProgramHeader();
-
-        template <sections_nb_t section_nb>
-        section_t* getSection();
-
         // Entry point of the program.
-        ptr_t m_entryPoint;
+        uintptr_t m_entryPoint;
         // Sections.
         section_t m_sections[section_max];
+    };
+
+    // Program header.
+    class ProgramHeader : public program_header_t
+    {
+     public:
+        template <sections_nb_t section_nb>
+        section_t* getSection();
     };
 
     // Program execution.
@@ -292,31 +299,28 @@ namespace vm
     {
      public:
         Program();
-        Program(array_t* binaryStub);
-        ptr_t getEntryPoint();
+        explicit Program(ProgramHeader* header);
+        uintptr_t getEntryPoint();
 
         // Header.
         ProgramHeader* m_header;
     };
 
-    typedef struct
+    struct program_arguments_t
     {
         ptr_t data;
         size_t size;
-    } program_arguments_t;
+    };
 
     // WriteProgram to write programs...
     class ProgramWrite : public Program
     {
      public:
-        ProgramWrite();
-        ~ProgramWrite();
-
         auto create();
         auto insertInstructions(std::vector<byte_t> instructions);
         auto insertReloc(uintptr_t reloc);
         auto insertData(std::vector<byte_t> data);
-        auto setEntryPoint(ptr_t entryPoint);
+        auto setEntryPoint(uintptr_t entryPoint);
 
         std::vector<byte_t> m_instructions;
         std::vector<byte_t> m_data;
@@ -333,7 +337,7 @@ namespace vm
     class VirtualMachine
     {
      public:
-        typedef union
+        union cpu_storage_register_t
         {
             // Unsigned
             rt<reg_8> b[8];
@@ -348,13 +352,13 @@ namespace vm
             rt<reg_pointer> p;
             rt<reg_float> f[2];
             rt<reg_double> d;
-        } cpu_storage_register_t;
+        };
 
         // The virtual machine registers.
-        typedef struct
+        struct cpu_registers_t
         {
             // Register of return value.
-            rt<reg_pointer> reg_ret;
+            rt<reg_64> reg_ret;
             // Base stack pointer.
             rt<reg_pointer> reg_bp;
             // Current stack pointer.
@@ -367,30 +371,32 @@ namespace vm
             cpu_storage_register_t reg_strg[num_of_storage_registers];
             // Flag is used to know if previous condition was true or false.
             bool m_bFlag;
-
-        } cpu_registers_t;
+        };
 
         // CPU Registers.
         cpu_registers_t m_CPU;
         // RAM.
-        byte_t m_RAM[ram_size];
+        byte_t m_RAM[ram_size] {};
         // Usable memory is after the stack,
         // so we won't write to the stack directly.
         // Usable memory = RAM + stack_size.
-        uintptr_t m_pUsableMemory;
+        uintptr_t m_pUsableMemory {};
         // Code in RAM.
-        section_t m_sectionCode;
+        section_t m_sectionCode {};
         // Data in RAM.
-        section_t m_sectionData;
-        bool m_bPaused;
+        section_t m_sectionData {};
+        bool m_bPaused {};
 
-        VirtualMachine() : m_pUsableMemory(0), m_bPaused(true)
+        VirtualMachine()
         {
             init();
         }
 
         auto init()
         {
+            // Init the return value.
+            m_CPU.reg_ret = -1;
+
             // Calculate the stack size, we will assume that it is only 1/8 of
             // the RAM.
             constexpr auto stack_size = 8 / ram_size;
@@ -398,9 +404,7 @@ namespace vm
             memset(&m_CPU, 0, sizeof(cpu_registers_t));
 
             // Usable memory setup.
-            m_pUsableMemory = reinterpret_cast<uintptr_t>(m_RAM);
-
-            m_pUsableMemory += stack_size;
+            m_pUsableMemory = static_cast<uintptr_t>(m_RAM);
 
             // Setup stack pointer.
             // This time we will go to the lower address to the highest.
@@ -420,8 +424,8 @@ namespace vm
 
             m_bPaused = false;
 
-            m_CPU.reg_ip = m_pUsableMemory + reinterpret_cast<uintptr_t>(
-                                                 program->getEntryPoint());
+            m_CPU.reg_ip = m_pUsableMemory +
+                           static_cast<uintptr_t>(program->getEntryPoint());
 
             if (args != nullptr)
             {
@@ -429,9 +433,7 @@ namespace vm
                 m_CPU.reg_sp += args->size;
 
                 // Setup the stack for the arguments.
-                memcpy(reinterpret_cast<ptr_t>(m_CPU.reg_sp),
-                       args->data,
-                       args->size);
+                memcpy(static_cast<ptr_t>(m_CPU.reg_sp), args->data, args->size);
             }
 
             run();
@@ -451,593 +453,196 @@ namespace vm
 
         inline auto readInstruction()
         {
-            auto instruction = *reinterpret_cast<instructions_t*>(m_CPU.reg_ip);
+            auto instruction = *static_cast<instructions_t*>(m_CPU.reg_ip);
 
             incrementIP(sizeof(instruction));
 
             return instruction;
         }
 
-        inline auto determinateRegStrg()
+        inline auto readRegStorage()
         {
-            auto storageType = *reinterpret_cast<register_storage_t*>(
-                m_CPU.reg_ip);
+            auto regStrg = *static_cast<register_storage_t*>(m_CPU.reg_ip);
+            incrementIP(sizeof(regStrg));
 
-            incrementIP(sizeof(storageType));
+            if (regStrg >= num_of_storage_registers)
+                static_assert("Not a storage register.");
 
-            return storageType;
-        }
+            auto reg = &m_CPU.reg_strg[regStrg];
 
-        inline auto determinateRegStrgSlot(cpu_storage_register_t* reg,
-                                           register_type_t* type)
-        {
-            auto slot = *reinterpret_cast<cpu_register_slot_t*>(m_CPU.reg_ip);
-
+            auto slot = *static_cast<register_storage_slot_t*>(m_CPU.reg_ip);
             incrementIP(sizeof(slot));
 
-            uintptr_t reg_addr = 0;
+            uintptr_t slot_addr = 0;
 
             switch (slot)
             {
                 // Unsigned.
-                case reg_1_byte:
-                    *type = reg_8;
-                    reg_addr = &reg->b[0];
+                case slot_1_byte:
+                    slot_addr = &reg->b[0];
                     break;
-                case reg_2_byte:
-                    *type = reg_8;
-                    reg_addr = &reg->b[1];
+                case slot_2_byte:
+                    slot_addr = &reg->b[1];
                     break;
-                case reg_3_byte:
-                    *type = reg_8;
-                    reg_addr = &reg->b[2];
+                case slot_3_byte:
+                    slot_addr = &reg->b[2];
                     break;
-                case reg_4_byte:
-                    *type = reg_8;
-                    reg_addr = &reg->b[3];
+                case slot_4_byte:
+                    slot_addr = &reg->b[3];
                     break;
-                case reg_5_byte:
-                    *type = reg_8;
-                    reg_addr = &reg->b[4];
+                case slot_5_byte:
+                    slot_addr = &reg->b[4];
                     break;
-                case reg_6_byte:
-                    *type = reg_8;
-                    reg_addr = &reg->b[5];
+                case slot_6_byte:
+                    slot_addr = &reg->b[5];
                     break;
-                case reg_7_byte:
-                    *type = reg_8;
-                    reg_addr = &reg->b[6];
+                case slot_7_byte:
+                    slot_addr = &reg->b[6];
                     break;
-                case reg_8_byte:
-                    *type = reg_8;
-                    reg_addr = &reg->b[7];
+                case slot_8_byte:
+                    slot_addr = &reg->b[7];
                     break;
-                case reg_1_short:
-                    *type = reg_16;
-                    reg_addr = &reg->s[0];
+                case slot_1_short:
+                    slot_addr = &reg->s[0];
                     break;
-                case reg_2_short:
-                    *type = reg_16;
-                    reg_addr = &reg->s[1];
+                case slot_2_short:
+                    slot_addr = &reg->s[1];
                     break;
-                case reg_3_short:
-                    *type = reg_16;
-                    reg_addr = &reg->s[2];
+                case slot_3_short:
+                    slot_addr = &reg->s[2];
                     break;
-                case reg_4_short:
-                    *type = reg_16;
-                    reg_addr = &reg->s[3];
+                case slot_4_short:
+                    slot_addr = &reg->s[3];
                     break;
-                case reg_1_int:
-                    *type = reg_32;
-                    reg_addr = &reg->i[0];
+                case slot_1_int:
+                    slot_addr = &reg->i[0];
                     break;
-                case reg_2_int:
-                    *type = reg_32;
-                    reg_addr = &reg->i[1];
+                case slot_2_int:
+                    slot_addr = &reg->i[1];
                     break;
-                case reg_1_long:
-                    *type = reg_64;
-                    reg_addr = &reg->l;
+                case slot_1_long:
+                    slot_addr = &reg->l;
                     break;
                 // Signed
-                case reg_1_byte_s:
-                    *type = reg_8_s;
-                    reg_addr = &reg->b_s[0];
+                case slot_1_byte_s:
+                    slot_addr = &reg->b_s[0];
                     break;
-                case reg_2_byte_s:
-                    *type = reg_8_s;
-                    reg_addr = &reg->b_s[1];
+                case slot_2_byte_s:
+                    slot_addr = &reg->b_s[1];
                     break;
-                case reg_3_byte_s:
-                    *type = reg_8_s;
-                    reg_addr = &reg->b_s[2];
+                case slot_3_byte_s:
+                    slot_addr = &reg->b_s[2];
                     break;
-                case reg_4_byte_s:
-                    *type = reg_8_s;
-                    reg_addr = &reg->b_s[3];
+                case slot_4_byte_s:
+                    slot_addr = &reg->b_s[3];
                     break;
-                case reg_5_byte_s:
-                    *type = reg_8_s;
-                    reg_addr = &reg->b_s[4];
+                case slot_5_byte_s:
+                    slot_addr = &reg->b_s[4];
                     break;
-                case reg_6_byte_s:
-                    *type = reg_8_s;
-                    reg_addr = &reg->b_s[5];
+                case slot_6_byte_s:
+                    slot_addr = &reg->b_s[5];
                     break;
-                case reg_7_byte_s:
-                    *type = reg_8_s;
-                    reg_addr = &reg->b_s[6];
+                case slot_7_byte_s:
+                    slot_addr = &reg->b_s[6];
                     break;
-                case reg_8_byte_s:
-                    *type = reg_8_s;
-                    reg_addr = &reg->b_s[7];
+                case slot_8_byte_s:
+                    slot_addr = &reg->b_s[7];
                     break;
-                case reg_1_short_s:
-                    *type = reg_16_s;
-                    reg_addr = &reg->s_s[0];
+                case slot_1_short_s:
+                    slot_addr = &reg->s_s[0];
                     break;
-                case reg_2_short_s:
-                    *type = reg_16_s;
-                    reg_addr = &reg->s_s[1];
+                case slot_2_short_s:
+                    slot_addr = &reg->s_s[1];
                     break;
-                case reg_3_short_s:
-                    *type = reg_16_s;
-                    reg_addr = &reg->s_s[2];
+                case slot_3_short_s:
+                    slot_addr = &reg->s_s[2];
                     break;
-                case reg_4_short_s:
-                    *type = reg_16_s;
-                    reg_addr = &reg->s_s[3];
+                case slot_4_short_s:
+                    slot_addr = &reg->s_s[3];
                     break;
-                case reg_1_int_s:
-                    *type = reg_32_s;
-                    reg_addr = &reg->i_s[0];
+                case slot_1_int_s:
+                    slot_addr = &reg->i_s[0];
                     break;
-                case reg_2_int_s:
-                    *type = reg_32_s;
-                    reg_addr = &reg->i_s[1];
+                case slot_2_int_s:
+                    slot_addr = &reg->i_s[1];
                     break;
-                case reg_1_long_s:
-                    *type = reg_64_s;
-                    reg_addr = &reg->l_s;
+                case slot_1_long_s:
+                    slot_addr = &reg->l_s;
                     break;
                 // Floats & doubles.
-                case reg_1_float:
-                    *type = reg_float;
-                    reg_addr = &reg->f[0];
+                case slot_1_float:
+                    slot_addr = &reg->f[0];
                     break;
-                case reg_2_float:
-                    *type = reg_float;
-                    reg_addr = &reg->f[1];
+                case slot_2_float:
+                    slot_addr = &reg->f[1];
                     break;
-                case reg_1_double:
-                    *type = reg_double;
-                    reg_addr = &reg->d;
+                case slot_1_double:
+                    slot_addr = &reg->d;
                     break;
             }
 
-            if (reg_addr == 0)
+            if (slot_addr == 0)
             {
-                assert("Unknown register slot.");
+                static_assert("Unknown register slot.");
             }
 
-            return reg_addr;
+            return slot_addr;
+        }
+
+        inline operation_type_t readOperationType()
+        {
+            auto op = *static_cast<operation_type_t*>(m_CPU.reg_ip);
+            incrementIP(sizeof(op));
+
+            if (op >= op_max)
+                static_assert("Not a valid operation type.");
+
+            return op;
+        }
+
+        inline size_t sizeofOperationType()
+        {
+            auto sizeOpType = *static_cast<byte_t*>(m_CPU.reg_ip);
+            incrementIP(sizeof(sizeOpType));
+
+            return sizeOpType;
         }
 
         inline auto addInstruction()
         {
-            // Read first on wich register we will store the result.
-            auto resultReg1 = &m_CPU.reg_strg[determinateRegStrg()];
-            auto resultReg2 = &m_CPU.reg_strg[determinateRegStrg()];
+            auto regResult = readRegStorage();
+            auto operationType = readOperationType();
+            auto size = sizeofOperationType();
 
-            // Now we need to know the type of add.
-            register_type_t type1, type2;
-            auto reg1 = determinateRegStrgSlot(resultReg1, &type1);
-            auto reg2 = determinateRegStrgSlot(resultReg2, &type2);
-
-            if (type1 != type2)
+            // This should never happen.
+            if (size > sizeof(rt<reg_64>))
             {
-                assert("Register isn't the same type");
+                static_assert("Exceeding size!");
             }
 
-            bool bDone = false;
+            rt<reg_64> regTemp = 0;
 
-            switch (type1)
+            switch (operationType)
             {
-                // Unsigned addition.
-                case reg_8:
+                case op_value:
                 {
-                    *reinterpret_cast<rt<reg_8>*>(
-                        reg1) += *reinterpret_cast<rt<reg_8>*>(reg2);
-                    bDone = true;
+                    // Should be just into instruction pointer.
+                    std::memcpy(&regTemp,
+                                static_cast<ptr_t>(m_CPU.reg_ip),
+                                size);
                     break;
                 }
-                case reg_16:
+
+                case op_register:
                 {
-                    *reinterpret_cast<rt<reg_16>*>(
-                        reg1) += *reinterpret_cast<rt<reg_16>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_32:
-                {
-                    *reinterpret_cast<rt<reg_32>*>(
-                        reg1) += *reinterpret_cast<rt<reg_32>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_64:
-                {
-                    *reinterpret_cast<rt<reg_64>*>(
-                        reg1) += *reinterpret_cast<rt<reg_64>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                // Signed addition
-                case reg_8_s:
-                {
-                    *reinterpret_cast<rt<reg_8_s>*>(
-                        reg1) += *reinterpret_cast<rt<reg_8_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_16_s:
-                {
-                    *reinterpret_cast<rt<reg_16_s>*>(
-                        reg1) += *reinterpret_cast<rt<reg_16_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_32_s:
-                {
-                    *reinterpret_cast<rt<reg_32_s>*>(
-                        reg1) += *reinterpret_cast<rt<reg_32_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_64_s:
-                {
-                    *reinterpret_cast<rt<reg_64_s>*>(
-                        reg1) += *reinterpret_cast<rt<reg_64_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_float:
-                {
-                    *reinterpret_cast<rt<reg_float>*>(
-                        reg1) += *reinterpret_cast<rt<reg_float>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_double:
-                {
-                    *reinterpret_cast<rt<reg_double>*>(
-                        reg1) += *reinterpret_cast<rt<reg_double>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_pointer:
-                {
-                    *reinterpret_cast<rt<reg_pointer>*>(
-                        reg1) += *reinterpret_cast<rt<reg_pointer>*>(reg2);
-                    bDone = true;
+                    // Otherwhise find out the register.
+                    auto regFound = readRegStorage();
+                    std::memcpy(&regTemp, static_cast<ptr_t>(regFound), size);
                     break;
                 }
             }
 
-            return bDone;
-        }
-
-        inline auto minusInstruction()
-        {
-            // Read first on wich register we will store the result.
-            auto resultReg1 = &m_CPU.reg_strg[determinateRegStrg()];
-            auto resultReg2 = &m_CPU.reg_strg[determinateRegStrg()];
-
-            // Now we need to know the type of minus.
-            register_type_t type1, type2;
-            auto reg1 = determinateRegStrgSlot(resultReg1, &type1);
-            auto reg2 = determinateRegStrgSlot(resultReg2, &type2);
-
-            if (type1 != type2)
-            {
-                assert("Register isn't the same type");
-            }
-
-            bool bDone = false;
-
-            switch (type1)
-            {
-                // Unsigned minus.
-                case reg_8:
-                {
-                    *reinterpret_cast<rt<reg_8>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_8>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_16:
-                {
-                    *reinterpret_cast<rt<reg_16>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_16>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_32:
-                {
-                    *reinterpret_cast<rt<reg_32>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_32>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_64:
-                {
-                    *reinterpret_cast<rt<reg_64>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_64>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                // Signed minus
-                case reg_8_s:
-                {
-                    *reinterpret_cast<rt<reg_8_s>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_8_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_16_s:
-                {
-                    *reinterpret_cast<rt<reg_16_s>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_16_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_32_s:
-                {
-                    *reinterpret_cast<rt<reg_32_s>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_32_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_64_s:
-                {
-                    *reinterpret_cast<rt<reg_64_s>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_64_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_float:
-                {
-                    *reinterpret_cast<rt<reg_float>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_float>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_double:
-                {
-                    *reinterpret_cast<rt<reg_double>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_double>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_pointer:
-                {
-                    *reinterpret_cast<rt<reg_pointer>*>(
-                        reg1) -= *reinterpret_cast<rt<reg_pointer>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-            }
-
-            return bDone;
-        }
-
-        inline auto divideInstruction()
-        {
-            // Read first on wich register we will store the result.
-            auto resultReg1 = &m_CPU.reg_strg[determinateRegStrg()];
-            auto resultReg2 = &m_CPU.reg_strg[determinateRegStrg()];
-
-            // Now we need to know the type of division.
-            register_type_t type1, type2;
-            auto reg1 = determinateRegStrgSlot(resultReg1, &type1);
-            auto reg2 = determinateRegStrgSlot(resultReg2, &type2);
-
-            if (type1 != type2)
-            {
-                assert("Register isn't the same type");
-            }
-
-            bool bDone = false;
-
-            switch (type1)
-            {
-                // Unsigned division.
-                case reg_8:
-                {
-                    *reinterpret_cast<rt<reg_8>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_8>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_16:
-                {
-                    *reinterpret_cast<rt<reg_16>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_16>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_32:
-                {
-                    *reinterpret_cast<rt<reg_32>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_32>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_64:
-                {
-                    *reinterpret_cast<rt<reg_64>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_64>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                // Signed division
-                case reg_8_s:
-                {
-                    *reinterpret_cast<rt<reg_8_s>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_8_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_16_s:
-                {
-                    *reinterpret_cast<rt<reg_16_s>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_16_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_32_s:
-                {
-                    *reinterpret_cast<rt<reg_32_s>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_32_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_64_s:
-                {
-                    *reinterpret_cast<rt<reg_64_s>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_64_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_float:
-                {
-                    *reinterpret_cast<rt<reg_float>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_float>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_double:
-                {
-                    *reinterpret_cast<rt<reg_double>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_double>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_pointer:
-                {
-                    *reinterpret_cast<rt<reg_pointer>*>(
-                        reg1) /= *reinterpret_cast<rt<reg_pointer>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-            }
-
-            return bDone;
-        }
-
-        inline auto multiplyInstruction()
-        {
-            // Read first on wich register we will store the result.
-            auto resultReg1 = &m_CPU.reg_strg[determinateRegStrg()];
-            auto resultReg2 = &m_CPU.reg_strg[determinateRegStrg()];
-
-            // Now we need to know the type of division.
-            register_type_t type1, type2;
-            auto reg1 = determinateRegStrgSlot(resultReg1, &type1);
-            auto reg2 = determinateRegStrgSlot(resultReg2, &type2);
-
-            if (type1 != type2)
-            {
-                assert("Register isn't the same type");
-            }
-
-            bool bDone = false;
-
-            switch (type1)
-            {
-                // Unsigned multiply.
-                case reg_8:
-                {
-                    *reinterpret_cast<rt<reg_8>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_8>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_16:
-                {
-                    *reinterpret_cast<rt<reg_16>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_16>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_32:
-                {
-                    *reinterpret_cast<rt<reg_32>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_32>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_64:
-                {
-                    *reinterpret_cast<rt<reg_64>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_64>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                // Signed multiply.
-                case reg_8_s:
-                {
-                    *reinterpret_cast<rt<reg_8_s>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_8_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_16_s:
-                {
-                    *reinterpret_cast<rt<reg_16_s>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_16_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_32_s:
-                {
-                    *reinterpret_cast<rt<reg_32_s>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_32_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_64_s:
-                {
-                    *reinterpret_cast<rt<reg_64_s>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_64_s>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_float:
-                {
-                    *reinterpret_cast<rt<reg_float>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_float>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_double:
-                {
-                    *reinterpret_cast<rt<reg_double>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_double>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-                case reg_pointer:
-                {
-                    *reinterpret_cast<rt<reg_pointer>*>(
-                        reg1) *= *reinterpret_cast<rt<reg_pointer>*>(reg2);
-                    bDone = true;
-                    break;
-                }
-            }
-
-            return bDone;
+            *static_cast<rt<reg_64>*>(regResult) += regTemp;
         }
 
         auto run()
@@ -1057,74 +662,35 @@ namespace vm
 
                 switch (instruction)
                 {
-                    case reg_add:
+                    case inst_add:
                     {
-                        if (!addInstruction())
+                        addInstruction();
+                        break;
+                    }
+                    case inst_set_ret:
+                    {
+                        auto result = readRegStorage();
+                        auto size = sizeofOperationType();
+
+                        // This should never happen.
+                        if (size > sizeof(rt<reg_64>))
                         {
-                            assert("Unknown addition");
+                            static_assert("Exceeding size!");
                         }
-                        break;
+
+                        std::memcpy(&m_CPU.reg_ret,
+                                    static_cast<ptr_t>(result),
+                                    size);
                     }
-
-                    case reg_minus:
+                    case inst_exit:
                     {
-                        if (!minusInstruction())
-                        {
-                            assert("Unknown minus");
-                        }
+                        bExit = true;
                         break;
-                    }
-
-                    case reg_divide:
-                    {
-                        if (!divideInstruction())
-                        {
-                            assert("Unknown divide");
-                        }
-                        break;
-                    }
-
-                    case reg_multiply:
-                    {
-                        if (!multiplyInstruction())
-                        {
-                            assert("Unknown mulitply");
-                        }
-                        break;
-                    }
-
-                    case reg_set_value:
-                    {
-                        break;
-                    }
-
-                    case reg_call:
-                    {
-                        break;
-                    }
-
-                    case reg_ret:
-                    {
-                        break;
-                    }
-
-                    case reg_jmp:
-                    {
-                        m_CPU.reg_ip = m_CPU.reg_strg[determinateRegStrg()].p;
-                        break;
-                    }
-
-                    case reg_set_ret:
-                    {
-                        m_CPU.reg_ret = m_CPU.reg_strg[determinateRegStrg()].p;
-                        break;
-
-                        case reg_exit:
-                            bExit = true;
-                            break;
                     }
                 }
             }
+
+            return m_CPU.reg_ret;
         }
 
         // Check if exceeding the stacks.
@@ -1139,7 +705,6 @@ namespace vm
             return true;
         }
     };
-
-};
+}; // namespace vm
 
 #endif // VM_TEMPLATE_H

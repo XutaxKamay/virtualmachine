@@ -2,11 +2,6 @@
 
 namespace vm
 {
-    ProgramHeader::ProgramHeader() : m_entryPoint(nullptr)
-    {
-        memset(m_sections, 0, sizeof(m_sections));
-    }
-
     template <sections_nb_t section_nb>
     section_t* ProgramHeader::getSection()
     {
@@ -16,28 +11,18 @@ namespace vm
     Program::Program() : m_header(nullptr)
     {}
 
-    Program::Program(array_t* binaryStub) :
-        m_header(reinterpret_cast<ProgramHeader*>(binaryStub))
+    Program::Program(ProgramHeader* header) :
+        m_header(static_cast<ProgramHeader*>(header))
     {}
 
-    ptr_t Program::getEntryPoint()
+    uintptr_t Program::getEntryPoint()
     {
         if (m_header != nullptr)
         {
             return m_header->m_entryPoint;
         }
 
-        return nullptr;
-    }
-
-    ProgramWrite::ProgramWrite()
-    {
-        m_header = new ProgramHeader();
-    }
-
-    ProgramWrite::~ProgramWrite()
-    {
-        delete m_header;
+        return 0;
     }
 
     auto ProgramWrite::insertInstructions(std::vector<byte_t> instructions)
@@ -61,22 +46,22 @@ namespace vm
     {
         std::vector<byte_t> binaryProgram;
 
-        size_t writeSize = sizeof(ProgramHeader);
+        size_t writeSize = sizeof(program_header_t);
 
         // Write instructions only if it's necessary
-        if (m_instructions.size() != 0)
+        if (!m_instructions.empty())
         {
             // Create section code first.
             auto sectionCode = m_header->getSection<section_code>();
 
-            sectionCode->m_pRBegin = sizeof(ProgramHeader);
+            sectionCode->m_pRBegin = sizeof(program_header_t);
             sectionCode->m_size = m_instructions.size();
 
             writeSize += sectionCode->m_size;
         }
 
         // Write data if it's only necessary.
-        if (m_data.size() != 0)
+        if (!m_data.empty())
         {
             // Create section data.
             auto sectionData = m_header->getSection<section_data>();
@@ -87,7 +72,7 @@ namespace vm
             writeSize += sectionData->m_size;
         }
 
-        if (m_relocs.size() != 0)
+        if (!m_relocs.empty())
         {
             // Create section relocation.
             auto sectionRelocs = m_header->getSection<section_relocs>();
@@ -98,39 +83,42 @@ namespace vm
         }
 
         // Check if we even need to write something.
-        if (writeSize > sizeof(ProgramHeader))
+        if (writeSize > sizeof(program_header_t))
         {
-            // Resize binary.
-            binaryProgram.resize(writeSize);
-
-            auto binaryBytes = reinterpret_cast<array_t>(binaryProgram.data());
             // Insert header informations inside the binary.
-            memcpy(binaryProgram.data(), m_header, sizeof(ProgramHeader));
+            std::vector<byte_t> headerBytes;
+            headerBytes.resize(sizeof(program_header_t));
 
-            binaryBytes += sizeof(ProgramHeader);
+            std::memcpy(headerBytes.data(), m_header, sizeof(program_header_t));
+            binaryProgram.insert(binaryProgram.end(),
+                                 headerBytes.begin(),
+                                 headerBytes.end());
 
             // Copy instructions.
-            memcpy(binaryBytes, m_instructions.data(), m_instructions.size());
-            binaryBytes += m_instructions.size();
+            binaryProgram.insert(binaryProgram.end(),
+                                 m_instructions.begin(),
+                                 m_instructions.end());
 
             // Copy data.
-            memcpy(binaryBytes, m_data.data(), m_data.size());
-            binaryBytes += m_data.size();
+            binaryProgram.insert(binaryProgram.end(),
+                                 m_data.begin(),
+                                 m_data.end());
 
             // Copy relocations.
-            memcpy(binaryBytes, m_relocs.data(), m_relocs.size());
-            binaryBytes += m_relocs.size();
+            binaryProgram.insert(binaryProgram.end(),
+                                 m_relocs.begin(),
+                                 m_relocs.end());
         }
         else
         {
-            assert("Creating empty program");
+            static_assert("Creating empty program");
         }
 
         return binaryProgram;
     }
 
-    auto ProgramWrite::setEntryPoint(ptr_t entryPoint)
+    auto ProgramWrite::setEntryPoint(uintptr_t entryPoint)
     {
         m_header->m_entryPoint = entryPoint;
     }
-};
+}; // namespace vm
