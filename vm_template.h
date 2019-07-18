@@ -28,7 +28,7 @@
 
 namespace vm
 {
-    constexpr auto default_ram_size = 0x1000000;
+    constexpr auto default_ram_size = 0x100000;
 
     using ptr_t = void*;
     using byte_t = uint8_t;
@@ -45,8 +45,7 @@ namespace vm
     template <typename type_t>
     inline constexpr type_wrapper_t<type_t> get_type {};
 
-#pragma pack(1)
-    enum instructions_t
+    enum instructions_t : byte_t
     {
         // Mathematical expressions.
         inst_add,
@@ -100,16 +99,26 @@ namespace vm
         inst_exit
     };
 
+    enum register_cast_type_t : byte_t
+    {
+        cast_float,
+        cast_double,
+        cast_8,
+        cast_16,
+        cast_32,
+        cast_64
+    };
+
     // What kind of operation is applied on, on value or on register.
-    enum operation_type_t
+    enum operation_type_t : byte_t
     {
         op_value,
-        op_register,
-        op_max
+        op_register
+
     };
 
     // Let's create some registers type for each data types.
-    enum register_type_t
+    enum register_type_t : byte_t
     {
         reg_8,
         reg_16,
@@ -125,7 +134,7 @@ namespace vm
     };
 
     // Number of storage registers.
-    enum register_storage_t
+    enum register_storage_t : byte_t
     {
         // Temporary registers.
         register_storage_temp1,
@@ -152,7 +161,7 @@ namespace vm
 
     };
 
-    enum register_storage_slot_t
+    enum register_storage_slot_t : byte_t
     {
         slot_1_byte,
         slot_2_byte,
@@ -188,8 +197,6 @@ namespace vm
         slot_2_float,
         slot_1_double
     };
-
-#pragma pack()
 
     // Get register size from an enum.
     template <register_type_t reg>
@@ -270,7 +277,7 @@ namespace vm
         size_t m_size;
     };
 
-    enum sections_nb_t
+    enum sections_nb_t : byte_t
     {
         section_code,
         section_data,
@@ -399,12 +406,12 @@ namespace vm
 
             // Calculate the stack size, we will assume that it is only 1/8 of
             // the RAM.
-            constexpr auto stack_size = 8 / ram_size;
+            constexpr auto stack_size = ram_size / 8;
             // Reset cpu.
             memset(&m_CPU, 0, sizeof(cpu_registers_t));
 
             // Usable memory setup.
-            m_pUsableMemory = static_cast<uintptr_t>(m_RAM);
+            m_pUsableMemory = reinterpret_cast<uintptr_t>(m_RAM);
 
             // Setup stack pointer.
             // This time we will go to the lower address to the highest.
@@ -453,7 +460,7 @@ namespace vm
 
         inline auto readInstruction()
         {
-            auto instruction = *static_cast<instructions_t*>(m_CPU.reg_ip);
+            auto instruction = *reinterpret_cast<instructions_t*>(m_CPU.reg_ip);
 
             incrementIP(sizeof(instruction));
 
@@ -462,7 +469,7 @@ namespace vm
 
         inline auto readRegStorage()
         {
-            auto regStrg = *static_cast<register_storage_t*>(m_CPU.reg_ip);
+            auto regStrg = *reinterpret_cast<register_storage_t*>(m_CPU.reg_ip);
             incrementIP(sizeof(regStrg));
 
             if (regStrg >= num_of_storage_registers)
@@ -470,10 +477,11 @@ namespace vm
 
             auto reg = &m_CPU.reg_strg[regStrg];
 
-            auto slot = *static_cast<register_storage_slot_t*>(m_CPU.reg_ip);
+            auto slot = *reinterpret_cast<register_storage_slot_t*>(
+                m_CPU.reg_ip);
             incrementIP(sizeof(slot));
 
-            uintptr_t slot_addr = 0;
+            ptr_t slot_addr = nullptr;
 
             switch (slot)
             {
@@ -581,7 +589,7 @@ namespace vm
                     break;
             }
 
-            if (slot_addr == 0)
+            if (slot_addr == nullptr)
             {
                 static_assert("Unknown register slot.");
             }
@@ -591,58 +599,137 @@ namespace vm
 
         inline operation_type_t readOperationType()
         {
-            auto op = *static_cast<operation_type_t*>(m_CPU.reg_ip);
+            auto op = *reinterpret_cast<operation_type_t*>(m_CPU.reg_ip);
             incrementIP(sizeof(op));
-
-            if (op >= op_max)
-                static_assert("Not a valid operation type.");
-
             return op;
         }
 
-        inline size_t sizeofOperationType()
+        inline register_cast_type_t readCastType(size_t* sizeType = nullptr)
         {
-            auto sizeOpType = *static_cast<byte_t*>(m_CPU.reg_ip);
-            incrementIP(sizeof(sizeOpType));
+            auto castType = *reinterpret_cast<register_cast_type_t*>(
+                m_CPU.reg_ip);
+            incrementIP(sizeof(castType));
 
-            return sizeOpType;
+            if (sizeType != nullptr)
+            {
+                switch (castType)
+                {
+                    case cast_8:
+                    {
+                        *sizeType = sizeof(uint8_t);
+                        break;
+                    }
+
+                    case cast_16:
+                    {
+                        *sizeType = sizeof(uint16_t);
+                        break;
+                    }
+
+                    case cast_32:
+                    {
+                        *sizeType = sizeof(uint32_t);
+                        break;
+                    }
+
+                    case cast_64:
+                    {
+                        *sizeType = sizeof(uint64_t);
+                        break;
+                    }
+                    case cast_double:
+                    {
+                        *sizeType = sizeof(double);
+                        break;
+                    }
+
+                    case cast_float:
+                    {
+                        *sizeType = sizeof(float);
+                        break;
+                    }
+                }
+            }
+
+            return castType;
         }
 
         inline auto addInstruction()
         {
             auto regResult = readRegStorage();
+            // It is a value or register
             auto operationType = readOperationType();
-            auto size = sizeofOperationType();
 
-            // This should never happen.
-            if (size > sizeof(rt<reg_64>))
-            {
-                static_assert("Exceeding size!");
-            }
+            // Cast type. Float or double.
+            size_t sizeType = 0;
+            auto cast = readCastType(&sizeType);
 
-            rt<reg_64> regTemp = 0;
+            uint64_t val;
 
             switch (operationType)
             {
                 case op_value:
                 {
-                    // Should be just into instruction pointer.
-                    std::memcpy(&regTemp,
-                                static_cast<ptr_t>(m_CPU.reg_ip),
-                                size);
+                    std::memcpy(&val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
                     break;
                 }
 
                 case op_register:
                 {
-                    // Otherwhise find out the register.
-                    auto regFound = readRegStorage();
-                    std::memcpy(&regTemp, static_cast<ptr_t>(regFound), size);
+                    auto regSecond = readRegStorage();
+                    std::memcpy(&val, regSecond, sizeType);
                     break;
                 }
             }
 
-            *static_cast<rt<reg_64>*>(regResult) += regTemp;
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<uint8_t*>(
+                        regResult) += *reinterpret_cast<uint8_t*>(&val);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<uint16_t*>(
+                        regResult) += *reinterpret_cast<uint16_t*>(&val);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<uint32_t*>(
+                        regResult) += *reinterpret_cast<uint32_t*>(&val);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<uint64_t*>(
+                        regResult) += *reinterpret_cast<uint64_t*>(&val);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<double*>(
+                        regResult) += *reinterpret_cast<double*>(&val);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<float*>(
+                        regResult) += *reinterpret_cast<float*>(&val);
+                    break;
+                }
+            }
         }
 
         auto run()
@@ -669,24 +756,45 @@ namespace vm
                     }
                     case inst_set_ret:
                     {
-                        auto result = readRegStorage();
-                        auto size = sizeofOperationType();
+                        auto operationType = readOperationType();
 
-                        // This should never happen.
-                        if (size > sizeof(rt<reg_64>))
+                        size_t sizeType = 0;
+                        readCastType(&sizeType);
+
+                        uint64_t val;
+
+                        switch (operationType)
                         {
-                            static_assert("Exceeding size!");
+                            case op_value:
+                            {
+                                std::memcpy(&val,
+                                            reinterpret_cast<ptr_t>(
+                                                m_CPU.reg_ip),
+                                            sizeType);
+
+                                incrementIP(sizeType);
+                                break;
+                            }
+
+                            case op_register:
+                            {
+                                auto regSecond = readRegStorage();
+                                std::memcpy(&val, regSecond, sizeType);
+                                break;
+                            }
                         }
 
-                        std::memcpy(&m_CPU.reg_ret,
-                                    static_cast<ptr_t>(result),
-                                    size);
+                        m_CPU.reg_ret = val;
+                        break;
                     }
                     case inst_exit:
                     {
                         bExit = true;
                         break;
                     }
+                    default:
+                        static_assert("Unknown instruction.");
+                        break;
                 }
             }
 
