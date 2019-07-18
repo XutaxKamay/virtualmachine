@@ -96,7 +96,8 @@ namespace vm
         // Set value of instister.
         inst_set_value,
         // Exit machine,
-        inst_exit
+        inst_exit,
+        inst_max
     };
 
     enum register_cast_type_t : byte_t
@@ -106,15 +107,20 @@ namespace vm
         cast_8,
         cast_16,
         cast_32,
-        cast_64
+        cast_64,
+        cast_8_s,
+        cast_16_s,
+        cast_32_s,
+        cast_64_s,
+        cast_max
     };
 
     // What kind of operation is applied on, on value or on register.
     enum operation_type_t : byte_t
     {
         op_value,
-        op_register
-
+        op_register,
+        op_max
     };
 
     // Let's create some registers type for each data types.
@@ -130,7 +136,9 @@ namespace vm
         reg_64_s,
         reg_float,
         reg_double,
-        reg_pointer
+        reg_pointer,
+        reg_max,
+        reg_count_max
     };
 
     // Number of storage registers.
@@ -158,7 +166,6 @@ namespace vm
         // Registers for writing to usable memory.
         register_storage_write,
         num_of_storage_registers
-
     };
 
     enum register_storage_slot_t : byte_t
@@ -195,7 +202,8 @@ namespace vm
         slot_1_long_s,
         slot_1_float,
         slot_2_float,
-        slot_1_double
+        slot_1_double,
+        slot_max
     };
 
     // Get register size from an enum.
@@ -234,6 +242,9 @@ namespace vm
 
         if constexpr (reg == reg_pointer)
             return get_type<uintptr_t>;
+
+        if constexpr (reg == reg_max)
+            return get_type<uintmax_t>;
 
         static_assert("Unknown register size");
     };
@@ -359,13 +370,14 @@ namespace vm
             rt<reg_pointer> p;
             rt<reg_float> f[2];
             rt<reg_double> d;
+            rt<reg_max> m;
         };
 
         // The virtual machine registers.
         struct cpu_registers_t
         {
             // Register of return value.
-            rt<reg_64> reg_ret;
+            rt<reg_max> reg_ret;
             // Base stack pointer.
             rt<reg_pointer> reg_bp;
             // Current stack pointer.
@@ -463,6 +475,9 @@ namespace vm
             auto instruction = *reinterpret_cast<instructions_t*>(m_CPU.reg_ip);
 
             incrementIP(sizeof(instruction));
+
+            if (instruction >= inst_max)
+                static_assert("Unknown instruction.");
 
             return instruction;
         }
@@ -601,6 +616,10 @@ namespace vm
         {
             auto op = *reinterpret_cast<operation_type_t*>(m_CPU.reg_ip);
             incrementIP(sizeof(op));
+
+            if (op >= op_max)
+                static_assert("Unknown operation type.");
+
             return op;
         }
 
@@ -609,6 +628,9 @@ namespace vm
             auto castType = *reinterpret_cast<register_cast_type_t*>(
                 m_CPU.reg_ip);
             incrementIP(sizeof(castType));
+
+            if (castType >= cast_max)
+                static_assert("Unknown cast.");
 
             if (sizeType != nullptr)
             {
@@ -637,6 +659,31 @@ namespace vm
                         *sizeType = sizeof(uint64_t);
                         break;
                     }
+
+                    case cast_8_s:
+                    {
+                        *sizeType = sizeof(int8_t);
+                        break;
+                    }
+
+                    case cast_16_s:
+                    {
+                        *sizeType = sizeof(int16_t);
+                        break;
+                    }
+
+                    case cast_32_s:
+                    {
+                        *sizeType = sizeof(int32_t);
+                        break;
+                    }
+
+                    case cast_64_s:
+                    {
+                        *sizeType = sizeof(int64_t);
+                        break;
+                    }
+
                     case cast_double:
                     {
                         *sizeType = sizeof(double);
@@ -664,13 +711,14 @@ namespace vm
             size_t sizeType = 0;
             auto cast = readCastType(&sizeType);
 
-            uint64_t val;
+            // Allocate memory for the final value to operate.
+            ptr_t val = operator new(sizeof(uintmax_t));
 
             switch (operationType)
             {
                 case op_value:
                 {
-                    std::memcpy(&val,
+                    std::memcpy(val,
                                 reinterpret_cast<ptr_t>(m_CPU.reg_ip),
                                 sizeType);
 
@@ -681,7 +729,7 @@ namespace vm
                 case op_register:
                 {
                     auto regSecond = readRegStorage();
-                    std::memcpy(&val, regSecond, sizeType);
+                    std::memcpy(val, regSecond, sizeType);
                     break;
                 }
             }
@@ -691,45 +739,75 @@ namespace vm
                 case cast_8:
                 {
                     *reinterpret_cast<uint8_t*>(
-                        regResult) += *reinterpret_cast<uint8_t*>(&val);
+                        regResult) += *reinterpret_cast<uint8_t*>(val);
                     break;
                 }
 
                 case cast_16:
                 {
                     *reinterpret_cast<uint16_t*>(
-                        regResult) += *reinterpret_cast<uint16_t*>(&val);
+                        regResult) += *reinterpret_cast<uint16_t*>(val);
                     break;
                 }
 
                 case cast_32:
                 {
                     *reinterpret_cast<uint32_t*>(
-                        regResult) += *reinterpret_cast<uint32_t*>(&val);
+                        regResult) += *reinterpret_cast<uint32_t*>(val);
                     break;
                 }
 
                 case cast_64:
                 {
                     *reinterpret_cast<uint64_t*>(
-                        regResult) += *reinterpret_cast<uint64_t*>(&val);
+                        regResult) += *reinterpret_cast<uint64_t*>(val);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<int8_t*>(
+                        regResult) += *reinterpret_cast<int8_t*>(val);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<int16_t*>(
+                        regResult) += *reinterpret_cast<int16_t*>(val);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<int32_t*>(
+                        regResult) += *reinterpret_cast<int32_t*>(val);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<int64_t*>(
+                        regResult) += *reinterpret_cast<int64_t*>(val);
                     break;
                 }
 
                 case cast_double:
                 {
                     *reinterpret_cast<double*>(
-                        regResult) += *reinterpret_cast<double*>(&val);
+                        regResult) += *reinterpret_cast<double*>(val);
                     break;
                 }
 
                 case cast_float:
                 {
                     *reinterpret_cast<float*>(
-                        regResult) += *reinterpret_cast<float*>(&val);
+                        regResult) += *reinterpret_cast<float*>(val);
                     break;
                 }
             }
+
+            operator delete(val);
         }
 
         auto run()
@@ -754,6 +832,7 @@ namespace vm
                         addInstruction();
                         break;
                     }
+                    // Set return value.
                     case inst_set_ret:
                     {
                         auto operationType = readOperationType();
@@ -761,13 +840,11 @@ namespace vm
                         size_t sizeType = 0;
                         readCastType(&sizeType);
 
-                        uint64_t val;
-
                         switch (operationType)
                         {
                             case op_value:
                             {
-                                std::memcpy(&val,
+                                std::memcpy(&m_CPU.reg_ret,
                                             reinterpret_cast<ptr_t>(
                                                 m_CPU.reg_ip),
                                             sizeType);
@@ -779,12 +856,11 @@ namespace vm
                             case op_register:
                             {
                                 auto regSecond = readRegStorage();
-                                std::memcpy(&val, regSecond, sizeType);
+                                std::memcpy(&m_CPU.reg_ret, regSecond, sizeType);
                                 break;
                             }
                         }
 
-                        m_CPU.reg_ret = val;
                         break;
                     }
                     case inst_exit:
@@ -792,13 +868,10 @@ namespace vm
                         bExit = true;
                         break;
                     }
-                    default:
-                        static_assert("Unknown instruction.");
-                        break;
                 }
             }
 
-            return m_CPU.reg_ret;
+            return &m_CPU.reg_ret;
         }
 
         // Check if exceeding the stacks.
