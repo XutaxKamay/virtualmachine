@@ -65,8 +65,8 @@ namespace vm
         // Conditions.
         inst_condition_lower,
         inst_condition_lowerequal,
-        inst_condition_higher,
-        inst_condition_higherequal,
+        inst_condition_greater,
+        inst_condition_greaterequal,
         inst_condition_equal,
         inst_condition_or,
         inst_condition_and,
@@ -1882,107 +1882,31 @@ namespace vm
             // It is a value or register
             auto operationType = readOperationType();
 
-            // Cast type. Float or double.
-            size_t sizeType = 0;
-            auto cast = readCastType(&sizeType);
-
             // Allocate memory for the final value to operate.
-            ptr_t val = operator new(sizeType);
+            bool val;
 
             switch (operationType)
             {
                 case op_value:
                 {
-                    std::memcpy(val,
+                    std::memcpy(&val,
                                 reinterpret_cast<ptr_t>(m_CPU.reg_ip),
-                                sizeType);
+                                sizeof(val));
 
-                    incrementIP(sizeType);
+                    incrementIP(sizeof(val));
                     break;
                 }
 
                 case op_register:
                 {
                     auto regSecond = readRegStorage();
-                    std::memcpy(val, regSecond, sizeType);
+                    val = *reinterpret_cast<bool*>(regSecond);
                     break;
                 }
             }
 
-            switch (cast)
-            {
-                case cast_8:
-                {
-                    *reinterpret_cast<uint8_t*>(
-                        regResult) = !*reinterpret_cast<uint8_t*>(val);
-                    break;
-                }
-
-                case cast_16:
-                {
-                    *reinterpret_cast<uint16_t*>(
-                        regResult) = !*reinterpret_cast<uint16_t*>(val);
-                    break;
-                }
-
-                case cast_32:
-                {
-                    *reinterpret_cast<uint32_t*>(
-                        regResult) = !*reinterpret_cast<uint32_t*>(val);
-                    break;
-                }
-
-                case cast_64:
-                {
-                    *reinterpret_cast<uint64_t*>(
-                        regResult) = !*reinterpret_cast<uint64_t*>(val);
-                    break;
-                }
-
-                case cast_8_s:
-                {
-                    *reinterpret_cast<int8_t*>(
-                        regResult) = !*reinterpret_cast<int8_t*>(val);
-                    break;
-                }
-
-                case cast_16_s:
-                {
-                    *reinterpret_cast<int16_t*>(
-                        regResult) = !*reinterpret_cast<int16_t*>(val);
-                    break;
-                }
-
-                case cast_32_s:
-                {
-                    *reinterpret_cast<int32_t*>(
-                        regResult) = !*reinterpret_cast<int32_t*>(val);
-                    break;
-                }
-
-                case cast_64_s:
-                {
-                    *reinterpret_cast<int64_t*>(
-                        regResult) = !*reinterpret_cast<int64_t*>(val);
-                    break;
-                }
-
-                case cast_double:
-                {
-                    *reinterpret_cast<double*>(
-                        regResult) = !*reinterpret_cast<double*>(val);
-                    break;
-                }
-
-                case cast_float:
-                {
-                    *reinterpret_cast<float*>(
-                        regResult) = !*reinterpret_cast<float*>(val);
-                    break;
-                }
-            }
-
-            operator delete(val);
+            *reinterpret_cast<bool*>(regResult) = !*reinterpret_cast<bool*>(
+                val);
         }
 
         inline auto equalInstruction()
@@ -2552,6 +2476,851 @@ namespace vm
             }
         }
 
+        inline auto conditionOrInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            bool val;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(&val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeof(val));
+
+                    incrementIP(sizeof(val));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val = *reinterpret_cast<bool*>(regSecond);
+                    break;
+                }
+            }
+
+            operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            bool val2;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(&val2,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeof(val2));
+
+                    incrementIP(sizeof(val2));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val2 = *reinterpret_cast<bool*>(regSecond);
+                    break;
+                }
+            }
+
+            *reinterpret_cast<bool*>(regResult) = val2 || val;
+        }
+
+        inline auto conditionAndInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            bool val;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(&val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeof(val));
+
+                    incrementIP(sizeof(val));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val = *reinterpret_cast<bool*>(regSecond);
+                    break;
+                }
+            }
+
+            operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            bool val2;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(&val2,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeof(val2));
+
+                    incrementIP(sizeof(val2));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val2 = *reinterpret_cast<bool*>(regSecond);
+                    break;
+                }
+            }
+
+            *reinterpret_cast<bool*>(regResult) = val2 && val;
+        }
+
+        inline auto conditionEqualInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Cast type. Float or double.
+            size_t sizeType = 0;
+            auto cast = readCastType(&sizeType);
+
+            // Allocate memory for the final value to operate.
+            ptr_t val = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            // It is a value or register
+            operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            ptr_t val2 = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint8_t*>(val) ==
+                                     *reinterpret_cast<uint8_t*>(val2);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint16_t*>(val) ==
+                                     *reinterpret_cast<uint16_t*>(val2);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint32_t*>(val) ==
+                                     *reinterpret_cast<uint32_t*>(val2);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint64_t*>(val) ==
+                                     *reinterpret_cast<uint64_t*>(val2);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int8_t*>(val) ==
+                                     *reinterpret_cast<int8_t*>(val2);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int16_t*>(val) ==
+                                     *reinterpret_cast<int16_t*>(val2);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int32_t*>(val) ==
+                                     *reinterpret_cast<int32_t*>(val2);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int64_t*>(val) ==
+                                     *reinterpret_cast<int64_t*>(val2);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<double*>(val) ==
+                                     *reinterpret_cast<double*>(val2);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<float*>(val) ==
+                                     *reinterpret_cast<float*>(val2);
+                    break;
+                }
+            }
+
+            operator delete(val);
+            operator delete(val2);
+        }
+
+        inline auto conditionLowerInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Cast type. Float or double.
+            size_t sizeType = 0;
+            auto cast = readCastType(&sizeType);
+
+            // Allocate memory for the final value to operate.
+            ptr_t val = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            // It is a value or register
+            operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            ptr_t val2 = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint8_t*>(val) <
+                                     *reinterpret_cast<uint8_t*>(val2);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint16_t*>(val) <
+                                     *reinterpret_cast<uint16_t*>(val2);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint32_t*>(val) <
+                                     *reinterpret_cast<uint32_t*>(val2);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint64_t*>(val) <
+                                     *reinterpret_cast<uint64_t*>(val2);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int8_t*>(val) <
+                                     *reinterpret_cast<int8_t*>(val2);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int16_t*>(val) <
+                                     *reinterpret_cast<int16_t*>(val2);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int32_t*>(val) <
+                                     *reinterpret_cast<int32_t*>(val2);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int64_t*>(val) <
+                                     *reinterpret_cast<int64_t*>(val2);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<double*>(val) <
+                                     *reinterpret_cast<double*>(val2);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<float*>(val) <
+                                     *reinterpret_cast<float*>(val2);
+                    break;
+                }
+            }
+
+            operator delete(val);
+            operator delete(val2);
+        }
+
+        inline auto conditionLowerEqualInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Cast type. Float or double.
+            size_t sizeType = 0;
+            auto cast = readCastType(&sizeType);
+
+            // Allocate memory for the final value to operate.
+            ptr_t val = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            // It is a value or register
+            operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            ptr_t val2 = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint8_t*>(val) <=
+                                     *reinterpret_cast<uint8_t*>(val2);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint16_t*>(val) <=
+                                     *reinterpret_cast<uint16_t*>(val2);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint32_t*>(val) <=
+                                     *reinterpret_cast<uint32_t*>(val2);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint64_t*>(val) <=
+                                     *reinterpret_cast<uint64_t*>(val2);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int8_t*>(val) <=
+                                     *reinterpret_cast<int8_t*>(val2);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int16_t*>(val) <=
+                                     *reinterpret_cast<int16_t*>(val2);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int32_t*>(val) <=
+                                     *reinterpret_cast<int32_t*>(val2);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int64_t*>(val) <=
+                                     *reinterpret_cast<int64_t*>(val2);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<double*>(val) <=
+                                     *reinterpret_cast<double*>(val2);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<float*>(val) <=
+                                     *reinterpret_cast<float*>(val2);
+                    break;
+                }
+            }
+
+            operator delete(val);
+            operator delete(val2);
+        }
+
+        inline auto conditionGreaterInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Cast type. Float or double.
+            size_t sizeType = 0;
+            auto cast = readCastType(&sizeType);
+
+            // Allocate memory for the final value to operate.
+            ptr_t val = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            // It is a value or register
+            operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            ptr_t val2 = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint8_t*>(val) >
+                                     *reinterpret_cast<uint8_t*>(val2);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint16_t*>(val) >
+                                     *reinterpret_cast<uint16_t*>(val2);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint32_t*>(val) >
+                                     *reinterpret_cast<uint32_t*>(val2);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint64_t*>(val) >
+                                     *reinterpret_cast<uint64_t*>(val2);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int8_t*>(val) >
+                                     *reinterpret_cast<int8_t*>(val2);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int16_t*>(val) >
+                                     *reinterpret_cast<int16_t*>(val2);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int32_t*>(val) >
+                                     *reinterpret_cast<int32_t*>(val2);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int64_t*>(val) >
+                                     *reinterpret_cast<int64_t*>(val2);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<double*>(val) >
+                                     *reinterpret_cast<double*>(val2);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<float*>(val) >
+                                     *reinterpret_cast<float*>(val2);
+                    break;
+                }
+            }
+
+            operator delete(val);
+            operator delete(val2);
+        }
+
+
+        inline auto conditionGreaterEqualInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Cast type. Float or double.
+            size_t sizeType = 0;
+            auto cast = readCastType(&sizeType);
+
+            // Allocate memory for the final value to operate.
+            ptr_t val = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            // It is a value or register
+            operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            ptr_t val2 = operator new(sizeType);
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    std::memcpy(val, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint8_t*>(val) >=
+                                     *reinterpret_cast<uint8_t*>(val2);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint16_t*>(val) >=
+                                     *reinterpret_cast<uint16_t*>(val2);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint32_t*>(val) >=
+                                     *reinterpret_cast<uint32_t*>(val2);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<uint64_t*>(val) >=
+                                     *reinterpret_cast<uint64_t*>(val2);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int8_t*>(val) >=
+                                     *reinterpret_cast<int8_t*>(val2);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int16_t*>(val) >=
+                                     *reinterpret_cast<int16_t*>(val2);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int32_t*>(val) >=
+                                     *reinterpret_cast<int32_t*>(val2);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<int64_t*>(val) >=
+                                     *reinterpret_cast<int64_t*>(val2);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<double*>(val) >=
+                                     *reinterpret_cast<double*>(val2);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<bool*>(
+                        regResult) = *reinterpret_cast<float*>(val) >=
+                                     *reinterpret_cast<float*>(val2);
+                    break;
+                }
+            }
+
+            operator delete(val);
+            operator delete(val2);
+        }
+
         inline auto run()
         {
             bool bExit = false;
@@ -2730,6 +3499,48 @@ namespace vm
                     case inst_write:
                     {
                         writeMemoryInstruction();
+                        break;
+                    }
+
+                    case inst_condition_or:
+                    {
+                        conditionOrInstruction();
+                        break;
+                    }
+
+                    case inst_condition_and:
+                    {
+                        conditionAndInstruction();
+                        break;
+                    }
+
+                    case inst_condition_equal:
+                    {
+                        conditionEqualInstruction();
+                        break;
+                    }
+
+                    case inst_condition_lower:
+                    {
+                        conditionLowerInstruction();
+                        break;
+                    }
+
+                    case inst_condition_lowerequal:
+                    {
+                        conditionLowerEqualInstruction();
+                        break;
+                    }
+
+                    case inst_condition_greater:
+                    {
+                        conditionGreaterInstruction();
+                        break;
+                    }
+
+                    case inst_condition_greaterequal:
+                    {
+                        conditionGreaterEqualInstruction();
                         break;
                     }
 
