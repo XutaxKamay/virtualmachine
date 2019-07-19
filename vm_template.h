@@ -70,7 +70,7 @@ namespace vm
         inst_condition_equal,
         inst_condition_or,
         inst_condition_and,
-        inst_condition_not,
+        inst_condition_test,
         // Stock & erase registers(/)values to the stack
         inst_push,
         inst_pop,
@@ -83,7 +83,7 @@ namespace vm
         // Read & write function to the "usable memory"
         inst_read,
         inst_write,
-        // Set return value address.
+        // Set return value/address.
         inst_set_ret,
         // Exit machine,
         inst_exit,
@@ -379,7 +379,7 @@ namespace vm
             // Random registers for storage.
             cpu_storage_register_t reg_strg[num_of_storage_registers];
             // Flag is used to know if previous condition was true or false.
-            bool m_bFlag;
+            bool flag;
         };
 
         // CPU Registers.
@@ -2281,6 +2281,277 @@ namespace vm
             }
         }
 
+        inline auto readMemoryInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Cast type. Float or double.
+            size_t sizeType = 0;
+            auto cast = readCastType(&sizeType);
+
+            // Allocate memory for the final value to operate.
+            ptr_t val = nullptr;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    val = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    incrementIP(sizeof(ptr_t));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val = *reinterpret_cast<ptr_t*>(regSecond);
+                    break;
+                }
+            }
+
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<uint8_t*>(
+                        regResult) = *reinterpret_cast<uint8_t*>(val);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<uint16_t*>(
+                        regResult) = *reinterpret_cast<uint16_t*>(val);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<uint32_t*>(
+                        regResult) = *reinterpret_cast<uint32_t*>(val);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<uint64_t*>(
+                        regResult) = *reinterpret_cast<uint64_t*>(val);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<int8_t*>(
+                        regResult) = *reinterpret_cast<int8_t*>(val);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<int16_t*>(
+                        regResult) = *reinterpret_cast<int16_t*>(val);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<int32_t*>(
+                        regResult) = *reinterpret_cast<int32_t*>(val);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<int64_t*>(
+                        regResult) = *reinterpret_cast<int64_t*>(val);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<double*>(
+                        regResult) = *reinterpret_cast<double*>(val);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<float*>(
+                        regResult) = *reinterpret_cast<float*>(val);
+                    break;
+                }
+            }
+        }
+
+        inline auto writeMemoryInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Cast type. Float or double.
+            auto cast = readCastType();
+
+            // Allocate memory for the final value to operate.
+            ptr_t val = nullptr;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    val = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    incrementIP(sizeof(ptr_t));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val = *reinterpret_cast<ptr_t*>(regSecond);
+                    break;
+                }
+            }
+
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<uint8_t*>(
+                        val) = *reinterpret_cast<uint8_t*>(regResult);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<uint16_t*>(
+                        val) = *reinterpret_cast<uint16_t*>(regResult);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<uint32_t*>(
+                        val) = *reinterpret_cast<uint32_t*>(regResult);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<uint64_t*>(
+                        val) = *reinterpret_cast<uint64_t*>(regResult);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<int8_t*>(
+                        val) = *reinterpret_cast<int8_t*>(regResult);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<int16_t*>(
+                        val) = *reinterpret_cast<int16_t*>(regResult);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<int32_t*>(
+                        val) = *reinterpret_cast<int32_t*>(regResult);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<int64_t*>(
+                        val) = *reinterpret_cast<int64_t*>(regResult);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<double*>(
+                        val) = *reinterpret_cast<double*>(regResult);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<float*>(val) = *reinterpret_cast<float*>(
+                        regResult);
+                    break;
+                }
+            }
+        }
+
+        inline auto conditionTestInstruction()
+        {
+            auto regResult = readRegStorage();
+
+            if (*reinterpret_cast<bool*>(regResult))
+                m_CPU.flag = true;
+            else
+                m_CPU.flag = false;
+
+            auto operationType = readOperationType();
+
+            ptr_t jump1 = nullptr;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    jump1 = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    incrementIP(sizeof(ptr_t));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    jump1 = *reinterpret_cast<ptr_t*>(regSecond);
+                    break;
+                }
+            }
+
+            operationType = readOperationType();
+
+            ptr_t jump2 = nullptr;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    jump2 = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    incrementIP(sizeof(ptr_t));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    jump2 = *reinterpret_cast<ptr_t*>(regSecond);
+                    break;
+                }
+            }
+
+            // 2 Addresses to jump on right address depending if the condition
+            // is true or false.
+
+            if (m_CPU.flag)
+            {
+                m_CPU.reg_ip = reinterpret_cast<uintptr_t>(jump1);
+            }
+            else
+            {
+                m_CPU.reg_ip = reinterpret_cast<uintptr_t>(jump2);
+            }
+        }
+
         inline auto run()
         {
             bool bExit = false;
@@ -2412,9 +2683,9 @@ namespace vm
                     {
                         // Set the instruction pointer of the previous call into
                         // the call stack
+                        m_CPU.reg_cp -= sizeof(m_CPU.reg_ip);
                         m_CPU.reg_ip = *reinterpret_cast<uintptr_t*>(
                             m_CPU.reg_cp);
-                        m_CPU.reg_cp -= sizeof(m_CPU.reg_ip);
                         break;
                     }
 
@@ -2449,6 +2720,25 @@ namespace vm
 
                         break;
                     }
+
+                    case inst_read:
+                    {
+                        readMemoryInstruction();
+                        break;
+                    }
+
+                    case inst_write:
+                    {
+                        writeMemoryInstruction();
+                        break;
+                    }
+
+                    case inst_condition_test:
+                    {
+                        conditionTestInstruction();
+                        break;
+                    }
+
                     case inst_exit:
                     {
                         bExit = true;
