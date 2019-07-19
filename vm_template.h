@@ -390,11 +390,17 @@ namespace vm
         // so we won't write to the stack directly.
         // Usable memory = RAM + stack_size.
         uintptr_t m_pUsableMemory {};
+        uintptr_t m_pStartStackArgsVars {};
+        uintptr_t m_pStartStackCalls {};
         // Code in RAM.
         section_t m_sectionCode {};
         // Data in RAM.
         section_t m_sectionData {};
         bool m_bPaused {};
+
+        // Calculate the stack size, we will assume that it is only 1/8 of
+        // the RAM.
+        uintptr_t stack_size = ram_size / 8;
 
         VirtualMachine()
         {
@@ -406,9 +412,6 @@ namespace vm
             // Init the return value.
             m_CPU.reg_ret = -1;
 
-            // Calculate the stack size, we will assume that it is only 1/8 of
-            // the RAM.
-            constexpr auto stack_size = ram_size / 8;
             // Reset cpu.
             memset(&m_CPU, 0, sizeof(cpu_registers_t));
 
@@ -417,12 +420,14 @@ namespace vm
 
             // Setup stack pointer.
             // This time we will go to the lower address to the highest.
+            m_pStartStackArgsVars = m_pUsableMemory;
             m_CPU.reg_bp = m_pUsableMemory;
             m_CPU.reg_sp = m_CPU.reg_bp;
             m_pUsableMemory += stack_size;
 
             // Setup call stack pointer.
             // Same here.
+            m_pStartStackCalls = m_pUsableMemory;
             m_CPU.reg_cp = m_pUsableMemory;
             m_pUsableMemory += stack_size;
         }
@@ -3174,7 +3179,6 @@ namespace vm
             operator delete(val2);
         }
 
-
         inline auto conditionGreaterEqualInstruction()
         {
             auto regResult = readRegStorage();
@@ -3564,13 +3568,31 @@ namespace vm
         // Check if exceeding the stacks.
         auto checkStacks()
         {
-            return true;
+            if (m_CPU.reg_cp >= m_pStartStackCalls &&
+                m_CPU.reg_cp < m_pStartStackCalls + stack_size)
+            {
+                return true;
+            }
+
+            if (m_CPU.reg_sp >= m_pStartStackArgsVars &&
+                m_CPU.reg_sp < m_pStartStackArgsVars + stack_size)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         // Check if exceeding the code section.
         auto checkCode()
         {
-            return true;
+            if (m_CPU.reg_ip >= m_pUsableMemory &&
+                m_CPU.reg_ip < (reinterpret_cast<uintptr_t>(m_RAM) + ram_size))
+            {
+                return true;
+            }
+
+            return false;
         }
     };
 }; // namespace vm
