@@ -477,9 +477,8 @@ namespace vm
             return instruction;
         }
 
-        inline auto readRegStorage(
-            register_cast_type_t* type = nullptr,
-            size_t* sizeType = nullptr)
+        inline auto readRegStorage(register_cast_type_t* type = nullptr,
+                                   size_t* sizeType = nullptr)
         {
             auto regStrg = *reinterpret_cast<register_storage_t*>(m_CPU.reg_ip);
             incrementIP(sizeof(regStrg));
@@ -818,8 +817,7 @@ namespace vm
             return op;
         }
 
-        inline register_cast_type_t readCastType(
-            size_t* sizeType = nullptr)
+        inline register_cast_type_t readCastType(size_t* sizeType = nullptr)
         {
             auto castType = *reinterpret_cast<register_cast_type_t*>(
                 m_CPU.reg_ip);
@@ -1492,6 +1490,7912 @@ namespace vm
             }
         }
 
+        inline auto minusInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) -=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) -=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) -=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) -=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) -=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) -=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) -=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) -=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) -=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) -=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) -=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) -=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) -=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) -=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) -=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) -=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) -=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) -=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) -=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) -=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) -=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) -=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) -=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) -=
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) -=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                static_cast<double>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                static_cast<double>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                static_cast<double>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                static_cast<double>(
+                                    *reinterpret_cast<int64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                static_cast<double>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<double*>(regResult) -=
+                                *reinterpret_cast<double*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_float:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<float*>(regResult) -=
+                                static_cast<float>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) -=
+                                static_cast<float>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<float*>(regResult) -=
+                                static_cast<float>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) -=
+                                static_cast<float>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<float*>(regResult) -=
+                                static_cast<float>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) -=
+                                static_cast<float>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<float*>(
+                                regResult) -= *reinterpret_cast<float*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        inline auto divideInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) /=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) /=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) /=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) /=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) /=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) /=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) /=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) /=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) /=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) /=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) /=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) /=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) /=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) /=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) /=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) /=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) /=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) /=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) /=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) /=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) /=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) /=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) /=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) /=
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) /=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                static_cast<double>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                static_cast<double>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                static_cast<double>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                static_cast<double>(
+                                    *reinterpret_cast<int64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                static_cast<double>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<double*>(regResult) /=
+                                *reinterpret_cast<double*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_float:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<float*>(regResult) /=
+                                static_cast<float>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) /=
+                                static_cast<float>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<float*>(regResult) /=
+                                static_cast<float>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) /=
+                                static_cast<float>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<float*>(regResult) /=
+                                static_cast<float>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) /=
+                                static_cast<float>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<float*>(
+                                regResult) /= *reinterpret_cast<float*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        inline auto multiplyInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) *=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) *=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) *=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) *=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) *=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) *=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) *=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) *=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) *=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) *=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) *=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) *=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) *=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) *=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) *=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) *=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) *=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) *=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) *=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) *=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) *=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) *=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) *=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) *=
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) *=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                static_cast<double>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                static_cast<double>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                static_cast<double>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                static_cast<double>(
+                                    *reinterpret_cast<uint64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                static_cast<double>(
+                                    *reinterpret_cast<int64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                static_cast<double>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<double*>(regResult) *=
+                                *reinterpret_cast<double*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_float:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<float*>(regResult) *=
+                                static_cast<float>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) *=
+                                static_cast<float>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<float*>(regResult) *=
+                                static_cast<float>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) *=
+                                static_cast<float>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<float*>(regResult) *=
+                                static_cast<float>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) *=
+                                static_cast<float>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<float*>(
+                                regResult) *= *reinterpret_cast<float*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        inline auto equalInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<double*>(
+                                regResult) = *reinterpret_cast<double*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_float:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<float*>(
+                                regResult) = *reinterpret_cast<float*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        inline auto modInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) %=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) %=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) %=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) %=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) %=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) %=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) %=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) %=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) %=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) %=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) %=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) %=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) %=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) %=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) %=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) %=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) %=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) %=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) %=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) %=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) %=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) %=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) %=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) %=
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) %=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    static_assert("Can't do mod operation on double.");
+                    break;
+                }
+
+                case cast_float:
+                {
+                    static_assert("Can't do mod operation on float.");
+                    break;
+                }
+            }
+        }
+
+        inline auto orInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) |=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) |=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) |=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) |=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) |=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) |=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) |=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) |=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) |=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) |=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) |=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) |=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) |=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) |=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) |=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) |=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) |=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) |=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) |=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) |=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) |=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) |=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) |=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) |=
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) |=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    static_assert("Can't do or operation on double.");
+                    break;
+                }
+
+                case cast_float:
+                {
+                    static_assert("Can't do or operation on float.");
+                    break;
+                }
+            }
+        }
+
+        inline auto xorInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) ^=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) ^=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) ^=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) ^=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) ^=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) ^=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) ^=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) ^=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) ^=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) ^=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) ^=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) ^=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) ^=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) ^=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) ^=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) ^=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) ^=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) ^=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) ^=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) ^=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) ^=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) ^=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) ^=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) ^=
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) ^=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    static_assert("Can't do xor operation on double.");
+                    break;
+                }
+
+                case cast_float:
+                {
+                    static_assert("Can't do xor operation on float.");
+                    break;
+                }
+            }
+        }
+
+        inline auto andInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) &=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) &=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) &=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) &=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) &=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) &=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) &=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) &=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) &=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) &=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) &=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) &=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) &=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) &=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) &=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) &=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) &=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) &=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) &=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) &=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) &=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) &=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) &=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) &=
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) &=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    static_assert("Can't do and operation on double.");
+                    break;
+                }
+
+                case cast_float:
+                {
+                    static_assert("Can't do and operation on float.");
+                    break;
+                }
+            }
+        }
+
+        inline auto sleftInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) <<=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) <<=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) <<=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) <<=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) <<=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) <<=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) <<=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) <<=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) <<=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) <<=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) <<=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) <<=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) <<=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) <<=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) <<=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) <<=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) <<=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) <<=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) <<=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) <<=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) <<=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) <<=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) <<=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) <<=
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) <<=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    static_assert("Can't do sleft operation on double.");
+                    break;
+                }
+
+                case cast_float:
+                {
+                    static_assert("Can't do sleft operation on float.");
+                    break;
+                }
+            }
+        }
+
+        inline auto srightInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) >>=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) >>=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) >>=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) >>=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) >>=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) >>=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) >>=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) >>=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) >>=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) >>=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) >>=
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) >>=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) >>=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) >>=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) >>=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) >>=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) >>=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) >>=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) >>=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) >>=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) >>=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) >>=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) >>=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) >>=
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) >>=
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    static_assert("Can't do sright operation on double.");
+                    break;
+                }
+
+                case cast_float:
+                {
+                    static_assert("Can't do sright operation on float.");
+                    break;
+                }
+            }
+        }
+
+        inline auto compInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+            size_t sizeRegResult;
+
+            auto intmax = alloca(sizeof(intmax_t));
+
+            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    size_t sizeType;
+                    typeSecond = readCastType(&sizeType);
+
+                    if (sizeRegResult < sizeType)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+
+                    incrementIP(sizeType);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    size_t sizeRegSecond;
+                    auto regSecond = readRegStorage(&typeSecond,
+                                                    &sizeRegSecond);
+
+                    if (sizeRegResult < sizeRegSecond)
+                    {
+                        static_assert("Can't do operation, size is higher.");
+                    }
+
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeRegSecond);
+
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) =
+                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) =
+                                ~*reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                ~*reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                ~*reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                ~*reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                ~*reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                ~*reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                ~static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                ~static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) =
+                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) =
+                                ~*reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                ~*reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                ~*reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                ~*reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                ~*reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                ~*reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                ~*reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                ~static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~*reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~*reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~*reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~*reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~*reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~*reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                ~static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    static_assert("Can't do comp operation on double.");
+                    break;
+                }
+
+                case cast_float:
+                {
+                    static_assert("Can't do comp operation on float.");
+                    break;
+                }
+            }
+        }
+
+        inline auto notInstruction()
+        {
+            auto regResult = readRegStorage();
+            auto operationType = readOperationType();
+
+            bool val;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(&val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeof(val));
+
+                    incrementIP(sizeof(val));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val = *reinterpret_cast<bool*>(regSecond);
+                    break;
+                }
+            }
+
+            *reinterpret_cast<bool*>(regResult) = !val;
+        }
+
+        inline auto pushInstruction()
+        {
+            size_t sizeType;
+            register_cast_type_t cast;
+
+            auto operationType = readOperationType();
+            auto intmax = alloca(sizeof(intmax_t));
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    cast = readCastType(&sizeType);
+                    std::memcpy(intmax,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType);
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage(&cast, &sizeType);
+                    std::memcpy(intmax, regSecond, sizeType);
+                    break;
+                }
+            }
+
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<uint8_t*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<uint8_t*>(intmax);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<uint16_t*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<uint16_t*>(intmax);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<uint32_t*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<uint32_t*>(intmax);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<uint64_t*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<uint64_t*>(intmax);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<int8_t*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<int8_t*>(intmax);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<int16_t*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<int16_t*>(intmax);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<int32_t*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<int32_t*>(intmax);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<int64_t*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<int64_t*>(intmax);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<double*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<double*>(intmax);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<float*>(
+                        m_CPU.reg_sp) = *reinterpret_cast<float*>(intmax);
+                    break;
+                }
+            }
+
+            m_CPU.reg_sp += sizeType;
+        }
+
+        inline auto popInstruction()
+        {
+            size_t sizeType;
+            register_cast_type_t cast;
+            auto regResult = readRegStorage(&cast, &sizeType);
+
+            m_CPU.reg_sp -= sizeType;
+
+            switch (cast)
+            {
+                case cast_8:
+                {
+                    *reinterpret_cast<uint8_t*>(
+                        regResult) = *reinterpret_cast<uint8_t*>(m_CPU.reg_sp);
+                    break;
+                }
+
+                case cast_16:
+                {
+                    *reinterpret_cast<uint16_t*>(
+                        regResult) = *reinterpret_cast<uint16_t*>(m_CPU.reg_sp);
+                    break;
+                }
+
+                case cast_32:
+                {
+                    *reinterpret_cast<uint32_t*>(
+                        regResult) = *reinterpret_cast<uint32_t*>(m_CPU.reg_sp);
+                    break;
+                }
+
+                case cast_64:
+                {
+                    *reinterpret_cast<uint64_t*>(
+                        regResult) = *reinterpret_cast<uint64_t*>(m_CPU.reg_sp);
+                    break;
+                }
+
+                case cast_8_s:
+                {
+                    *reinterpret_cast<int8_t*>(
+                        regResult) = *reinterpret_cast<int8_t*>(m_CPU.reg_sp);
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    *reinterpret_cast<int16_t*>(
+                        regResult) = *reinterpret_cast<int16_t*>(m_CPU.reg_sp);
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    *reinterpret_cast<int32_t*>(
+                        regResult) = *reinterpret_cast<int32_t*>(m_CPU.reg_sp);
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    *reinterpret_cast<int64_t*>(
+                        regResult) = *reinterpret_cast<int64_t*>(m_CPU.reg_sp);
+                    break;
+                }
+
+                case cast_double:
+                {
+                    *reinterpret_cast<double*>(
+                        regResult) = *reinterpret_cast<double*>(m_CPU.reg_sp);
+                    break;
+                }
+
+                case cast_float:
+                {
+                    *reinterpret_cast<float*>(
+                        regResult) = *reinterpret_cast<float*>(m_CPU.reg_sp);
+                    break;
+                }
+            }
+        }
+
+        inline auto readMemoryInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+
+            ptr_t intmax = nullptr;
+
+            auto regResult = readRegStorage(&typeResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeSecond = readCastType();
+                    intmax = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    incrementIP(sizeof(intmax));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage(&typeSecond);
+                    intmax = *reinterpret_cast<ptr_t*>(regSecond);
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(regResult) =
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(regResult) =
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(regResult) =
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<uint8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<int8_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<uint16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<int16_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<uint32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<int32_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<uint64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                *reinterpret_cast<int64_t*>(intmax);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(regResult) =
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(intmax));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int64_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<double*>(regResult) =
+                                static_cast<double>(
+                                    *reinterpret_cast<float*>(intmax));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<double*>(
+                                regResult) = *reinterpret_cast<double*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_float:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<uint8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<int8_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<uint16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<int16_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<uint32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<float*>(regResult) =
+                                static_cast<float>(
+                                    *reinterpret_cast<int32_t*>(intmax));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<float*>(
+                                regResult) = *reinterpret_cast<float*>(intmax);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        inline auto writeMemoryInstruction()
+        {
+            register_cast_type_t typeResult, typeSecond;
+
+            ptr_t intmax = nullptr;
+
+            auto regResult = readRegStorage(&typeResult);
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeSecond = readCastType();
+                    intmax = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    incrementIP(sizeof(intmax));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage(&typeSecond);
+                    intmax = *reinterpret_cast<ptr_t*>(regSecond);
+                    break;
+                }
+            }
+
+            switch (typeResult)
+            {
+                case cast_8:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint8_t*>(intmax) =
+                                *reinterpret_cast<uint8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint8_t*>(
+                                intmax) = *reinterpret_cast<int8_t*>(regResult);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint16_t*>(intmax) =
+                                *reinterpret_cast<uint8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(
+                                intmax) = *reinterpret_cast<int8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint16_t*>(intmax) =
+                                *reinterpret_cast<uint16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint16_t*>(intmax) =
+                                *reinterpret_cast<int16_t*>(regResult);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<uint8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<int8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<uint16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<int16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<uint32_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<int32_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                static_cast<uint32_t>(
+                                    *reinterpret_cast<float*>(regResult));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<uint8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<int8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<uint16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<int16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<uint32_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<uint32_t*>(intmax) =
+                                *reinterpret_cast<int32_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<uint64_t*>(intmax) =
+                                *reinterpret_cast<uint64_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<uint64_t*>(intmax) =
+                                *reinterpret_cast<int64_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<uint64_t*>(intmax) =
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<float*>(regResult));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<uint64_t*>(intmax) =
+                                static_cast<uint64_t>(
+                                    *reinterpret_cast<double*>(regResult));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+                case cast_8_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int8_t*>(intmax) =
+                                *reinterpret_cast<uint8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int8_t*>(
+                                intmax) = *reinterpret_cast<int8_t*>(regResult);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_16_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int16_t*>(intmax) =
+                                *reinterpret_cast<uint8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int16_t*>(
+                                intmax) = *reinterpret_cast<int8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int16_t*>(intmax) =
+                                *reinterpret_cast<uint16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int16_t*>(intmax) =
+                                *reinterpret_cast<int16_t*>(regResult);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_32_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int32_t*>(intmax) =
+                                *reinterpret_cast<uint8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int32_t*>(
+                                intmax) = *reinterpret_cast<int8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int32_t*>(intmax) =
+                                *reinterpret_cast<uint16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int32_t*>(intmax) =
+                                *reinterpret_cast<int16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int32_t*>(intmax) =
+                                *reinterpret_cast<uint32_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int32_t*>(intmax) =
+                                *reinterpret_cast<int32_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int32_t*>(intmax) =
+                                static_cast<int32_t>(
+                                    *reinterpret_cast<float*>(regResult));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_64_s:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<int64_t*>(intmax) =
+                                *reinterpret_cast<uint8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<int64_t*>(
+                                intmax) = *reinterpret_cast<int8_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<int64_t*>(intmax) =
+                                *reinterpret_cast<uint16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<int64_t*>(intmax) =
+                                *reinterpret_cast<int16_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<int64_t*>(intmax) =
+                                *reinterpret_cast<uint32_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<int64_t*>(intmax) =
+                                *reinterpret_cast<int32_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<int64_t*>(intmax) =
+                                *reinterpret_cast<uint64_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<int64_t*>(intmax) =
+                                *reinterpret_cast<int64_t*>(regResult);
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<int64_t*>(intmax) =
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<float*>(regResult));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<int64_t*>(intmax) =
+                                static_cast<int64_t>(
+                                    *reinterpret_cast<double*>(regResult));
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_double:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<double*>(intmax) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint8_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<double*>(intmax) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int8_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<double*>(intmax) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint16_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<double*>(intmax) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int16_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<double*>(intmax) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint32_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<double*>(intmax) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int32_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_64:
+                        {
+                            *reinterpret_cast<double*>(intmax) =
+                                static_cast<double>(
+                                    *reinterpret_cast<uint64_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_64_s:
+                        {
+                            *reinterpret_cast<double*>(intmax) =
+                                static_cast<double>(
+                                    *reinterpret_cast<int64_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<double*>(intmax) =
+                                static_cast<double>(
+                                    *reinterpret_cast<float*>(regResult));
+                            break;
+                        }
+
+                        case cast_double:
+                        {
+                            *reinterpret_cast<double*>(
+                                intmax) = *reinterpret_cast<double*>(regResult);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+
+                case cast_float:
+                {
+                    switch (typeSecond)
+                    {
+                        case cast_8:
+                        {
+                            *reinterpret_cast<float*>(intmax) =
+                                static_cast<float>(
+                                    *reinterpret_cast<uint8_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_8_s:
+                        {
+                            *reinterpret_cast<float*>(intmax) =
+                                static_cast<float>(
+                                    *reinterpret_cast<int8_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_16:
+                        {
+                            *reinterpret_cast<float*>(intmax) =
+                                static_cast<float>(
+                                    *reinterpret_cast<uint16_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_16_s:
+                        {
+                            *reinterpret_cast<float*>(intmax) =
+                                static_cast<float>(
+                                    *reinterpret_cast<int16_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_32:
+                        {
+                            *reinterpret_cast<float*>(intmax) =
+                                static_cast<float>(
+                                    *reinterpret_cast<uint32_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_32_s:
+                        {
+                            *reinterpret_cast<float*>(intmax) =
+                                static_cast<float>(
+                                    *reinterpret_cast<int32_t*>(regResult));
+                            break;
+                        }
+
+                        case cast_float:
+                        {
+                            *reinterpret_cast<float*>(
+                                intmax) = *reinterpret_cast<float*>(regResult);
+                            break;
+                        }
+                    }
+
+                    break;
+                }
+            }
+        }
+
+        inline auto conditionOrInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            bool val;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(&val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeof(val));
+
+                    incrementIP(sizeof(val));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val = *reinterpret_cast<bool*>(regSecond);
+                    break;
+                }
+            }
+
+            operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            bool val2;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(&val2,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeof(val2));
+
+                    incrementIP(sizeof(val2));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val2 = *reinterpret_cast<bool*>(regSecond);
+                    break;
+                }
+            }
+
+            *reinterpret_cast<bool*>(regResult) = val2 || val;
+        }
+
+        inline auto conditionAndInstruction()
+        {
+            auto regResult = readRegStorage();
+            // It is a value or register
+            auto operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            bool val;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(&val,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeof(val));
+
+                    incrementIP(sizeof(val));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val = *reinterpret_cast<bool*>(regSecond);
+                    break;
+                }
+            }
+
+            operationType = readOperationType();
+
+            // Allocate memory for the final value to operate.
+            bool val2;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    std::memcpy(&val2,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeof(val2));
+
+                    incrementIP(sizeof(val2));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    val2 = *reinterpret_cast<bool*>(regSecond);
+                    break;
+                }
+            }
+
+            *reinterpret_cast<bool*>(regResult) = val2 && val;
+        }
+
+        inline auto conditionEqualInstruction()
+        {
+            register_cast_type_t typeFirst, typeSecond;
+            size_t sizeType1, sizeType2;
+
+            auto intmax1 = alloca(sizeof(intmax_t));
+            auto intmax2 = alloca(sizeof(intmax_t));
+
+            auto regBoolResult = readRegStorage();
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeFirst = readCastType(&sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType1);
+
+                    incrementIP(sizeType1);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(regFirst),
+                                sizeType1);
+
+                    break;
+                }
+            }
+
+            operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeSecond = readCastType(&sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType2);
+
+                    incrementIP(sizeType2);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeType2);
+
+                    break;
+                }
+            }
+
+            if (typeFirst != typeSecond)
+            {
+                static_assert("Can't compare two different types.");
+            }
+            else
+            {
+                switch (typeFirst)
+                {
+                    case cast_8:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint8_t*>(intmax1) ==
+                            *reinterpret_cast<uint8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint16_t*>(intmax1) ==
+                            *reinterpret_cast<uint16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint32_t*>(intmax1) ==
+                            *reinterpret_cast<uint32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint64_t*>(intmax1) ==
+                            *reinterpret_cast<uint64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_8_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int8_t*>(intmax1) ==
+                            *reinterpret_cast<int8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int16_t*>(intmax1) ==
+                            *reinterpret_cast<int16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int32_t*>(intmax1) ==
+                            *reinterpret_cast<int32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int64_t*>(intmax1) ==
+                            *reinterpret_cast<int64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_double:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<double*>(intmax1) ==
+                            *reinterpret_cast<double*>(intmax2);
+                        break;
+                    }
+
+                    case cast_float:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<float*>(intmax1) ==
+                            *reinterpret_cast<float*>(intmax2);
+                        break;
+                    }
+                }
+            }
+        }
+
+        inline auto conditionLowerInstruction()
+        {
+            register_cast_type_t typeFirst, typeSecond;
+            size_t sizeType1, sizeType2;
+
+            auto intmax1 = alloca(sizeof(intmax_t));
+            auto intmax2 = alloca(sizeof(intmax_t));
+
+            auto regBoolResult = readRegStorage();
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeFirst = readCastType(&sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType1);
+
+                    incrementIP(sizeType1);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(regFirst),
+                                sizeType1);
+
+                    break;
+                }
+            }
+
+            operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeSecond = readCastType(&sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType2);
+
+                    incrementIP(sizeType2);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeType2);
+
+                    break;
+                }
+            }
+
+            if (typeFirst != typeSecond)
+            {
+                static_assert("Can't compare two different types.");
+            }
+            else
+            {
+                switch (typeFirst)
+                {
+                    case cast_8:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint8_t*>(intmax1) <
+                            *reinterpret_cast<uint8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint16_t*>(intmax1) <
+                            *reinterpret_cast<uint16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint32_t*>(intmax1) <
+                            *reinterpret_cast<uint32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint64_t*>(intmax1) <
+                            *reinterpret_cast<uint64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_8_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int8_t*>(intmax1) <
+                            *reinterpret_cast<int8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int16_t*>(intmax1) <
+                            *reinterpret_cast<int16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int32_t*>(intmax1) <
+                            *reinterpret_cast<int32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int64_t*>(intmax1) <
+                            *reinterpret_cast<int64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_double:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<double*>(intmax1) <
+                            *reinterpret_cast<double*>(intmax2);
+                        break;
+                    }
+
+                    case cast_float:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<float*>(intmax1) <
+                            *reinterpret_cast<float*>(intmax2);
+                        break;
+                    }
+                }
+            }
+        }
+
+        inline auto conditionLowerEqualInstruction()
+        {
+            register_cast_type_t typeFirst, typeSecond;
+            size_t sizeType1, sizeType2;
+
+            auto intmax1 = alloca(sizeof(intmax_t));
+            auto intmax2 = alloca(sizeof(intmax_t));
+
+            auto regBoolResult = readRegStorage();
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeFirst = readCastType(&sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType1);
+
+                    incrementIP(sizeType1);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(regFirst),
+                                sizeType1);
+
+                    break;
+                }
+            }
+
+            operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeSecond = readCastType(&sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType2);
+
+                    incrementIP(sizeType2);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeType2);
+
+                    break;
+                }
+            }
+
+            if (typeFirst != typeSecond)
+            {
+                static_assert("Can't compare two different types.");
+            }
+            else
+            {
+                switch (typeFirst)
+                {
+                    case cast_8:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint8_t*>(intmax1) <=
+                            *reinterpret_cast<uint8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint16_t*>(intmax1) <=
+                            *reinterpret_cast<uint16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint32_t*>(intmax1) <=
+                            *reinterpret_cast<uint32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint64_t*>(intmax1) <=
+                            *reinterpret_cast<uint64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_8_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int8_t*>(intmax1) <=
+                            *reinterpret_cast<int8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int16_t*>(intmax1) <=
+                            *reinterpret_cast<int16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int32_t*>(intmax1) <=
+                            *reinterpret_cast<int32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int64_t*>(intmax1) <=
+                            *reinterpret_cast<int64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_double:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<double*>(intmax1) <=
+                            *reinterpret_cast<double*>(intmax2);
+                        break;
+                    }
+
+                    case cast_float:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<float*>(intmax1) <=
+                            *reinterpret_cast<float*>(intmax2);
+                        break;
+                    }
+                }
+            }
+        }
+
+        inline auto conditionGreaterInstruction()
+        {
+            register_cast_type_t typeFirst, typeSecond;
+            size_t sizeType1, sizeType2;
+
+            auto intmax1 = alloca(sizeof(intmax_t));
+            auto intmax2 = alloca(sizeof(intmax_t));
+
+            auto regBoolResult = readRegStorage();
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeFirst = readCastType(&sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType1);
+
+                    incrementIP(sizeType1);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(regFirst),
+                                sizeType1);
+
+                    break;
+                }
+            }
+
+            operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeSecond = readCastType(&sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType2);
+
+                    incrementIP(sizeType2);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeType2);
+
+                    break;
+                }
+            }
+
+            if (typeFirst != typeSecond)
+            {
+                static_assert("Can't compare two different types.");
+            }
+            else
+            {
+                switch (typeFirst)
+                {
+                    case cast_8:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint8_t*>(intmax1) >
+                            *reinterpret_cast<uint8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint16_t*>(intmax1) >
+                            *reinterpret_cast<uint16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint32_t*>(intmax1) >
+                            *reinterpret_cast<uint32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint64_t*>(intmax1) >
+                            *reinterpret_cast<uint64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_8_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int8_t*>(intmax1) >
+                            *reinterpret_cast<int8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int16_t*>(intmax1) >
+                            *reinterpret_cast<int16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int32_t*>(intmax1) >
+                            *reinterpret_cast<int32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int64_t*>(intmax1) >
+                            *reinterpret_cast<int64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_double:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<double*>(intmax1) >
+                            *reinterpret_cast<double*>(intmax2);
+                        break;
+                    }
+
+                    case cast_float:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<float*>(intmax1) >
+                            *reinterpret_cast<float*>(intmax2);
+                        break;
+                    }
+                }
+            }
+        }
+
+        inline auto conditionGreaterEqualInstruction()
+        {
+            register_cast_type_t typeFirst, typeSecond;
+            size_t sizeType1, sizeType2;
+
+            auto intmax1 = alloca(sizeof(intmax_t));
+            auto intmax2 = alloca(sizeof(intmax_t));
+
+            auto regBoolResult = readRegStorage();
+            auto operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeFirst = readCastType(&sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType1);
+
+                    incrementIP(sizeType1);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+
+                    std::memcpy(intmax1,
+                                reinterpret_cast<ptr_t>(regFirst),
+                                sizeType1);
+
+                    break;
+                }
+            }
+
+            operation = readOperationType();
+
+            switch (operation)
+            {
+                case op_value:
+                {
+                    typeSecond = readCastType(&sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                sizeType2);
+
+                    incrementIP(sizeType2);
+
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+
+                    std::memcpy(intmax2,
+                                reinterpret_cast<ptr_t>(regSecond),
+                                sizeType2);
+
+                    break;
+                }
+            }
+
+            if (typeFirst != typeSecond)
+            {
+                static_assert("Can't compare two different types.");
+            }
+            else
+            {
+                switch (typeFirst)
+                {
+                    case cast_8:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint8_t*>(intmax1) >=
+                            *reinterpret_cast<uint8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint16_t*>(intmax1) >=
+                            *reinterpret_cast<uint16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint32_t*>(intmax1) >=
+                            *reinterpret_cast<uint32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<uint64_t*>(intmax1) >=
+                            *reinterpret_cast<uint64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_8_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int8_t*>(intmax1) >=
+                            *reinterpret_cast<int8_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_16_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int16_t*>(intmax1) >=
+                            *reinterpret_cast<int16_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_32_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int32_t*>(intmax1) >=
+                            *reinterpret_cast<int32_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_64_s:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<int64_t*>(intmax1) >=
+                            *reinterpret_cast<int64_t*>(intmax2);
+                        break;
+                    }
+
+                    case cast_double:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<double*>(intmax1) >=
+                            *reinterpret_cast<double*>(intmax2);
+                        break;
+                    }
+
+                    case cast_float:
+                    {
+                        *reinterpret_cast<bool*>(regBoolResult) =
+                            *reinterpret_cast<float*>(intmax1) >=
+                            *reinterpret_cast<float*>(intmax2);
+                        break;
+                    }
+                }
+            }
+        }
+
+        inline auto conditionTestInstruction()
+        {
+            auto regResult = readRegStorage();
+
+            if (*reinterpret_cast<bool*>(regResult))
+                m_CPU.flag = true;
+            else
+                m_CPU.flag = false;
+
+            auto operationType = readOperationType();
+
+            ptr_t jump1 = nullptr;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    jump1 = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    incrementIP(sizeof(ptr_t));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    jump1 = *reinterpret_cast<ptr_t*>(regSecond);
+                    break;
+                }
+            }
+
+            operationType = readOperationType();
+
+            ptr_t jump2 = nullptr;
+
+            switch (operationType)
+            {
+                case op_value:
+                {
+                    jump2 = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    incrementIP(sizeof(ptr_t));
+                    break;
+                }
+
+                case op_register:
+                {
+                    auto regSecond = readRegStorage();
+                    jump2 = *reinterpret_cast<ptr_t*>(regSecond);
+                    break;
+                }
+            }
+
+            // 2 Addresses to jump on right address depending if the condition
+            // is true or false.
+
+            if (m_CPU.flag)
+            {
+                m_CPU.reg_ip = reinterpret_cast<uintptr_t>(jump1);
+            }
+            else
+            {
+                m_CPU.reg_ip = reinterpret_cast<uintptr_t>(jump2);
+            }
+        }
+
         inline auto run()
         {
             bool bExit = false;
@@ -1518,85 +9422,85 @@ namespace vm
 
                     case inst_minus:
                     {
-                        // minusInstruction();
+                        minusInstruction();
                         break;
                     }
 
                     case inst_divide:
                     {
-                        // divideInstruction();
+                        divideInstruction();
                         break;
                     }
 
                     case inst_multiply:
                     {
-                        //  multiplyInstruction();
-                        break;
-                    }
-
-                    case inst_mod:
-                    {
-                        //  modInstruction();
-                        break;
-                    }
-
-                    case inst_or:
-                    {
-                        //  orInstruction();
-                        break;
-                    }
-
-                    case inst_xor:
-                    {
-                        //  xorInstruction();
-                        break;
-                    }
-
-                    case inst_and:
-                    {
-                        //  andInstruction();
-                        break;
-                    }
-
-                    case inst_sleft:
-                    {
-                        //  sleftInstruction();
-                        break;
-                    }
-
-                    case inst_sright:
-                    {
-                        // srightInstruction();
-                        break;
-                    }
-
-                    case inst_comp:
-                    {
-                        //  compInstruction();
-                        break;
-                    }
-
-                    case inst_not:
-                    {
-                        // notInstruction();
+                        multiplyInstruction();
                         break;
                     }
 
                     case inst_equal:
                     {
-                        //  equalInstruction();
+                        equalInstruction();
+                        break;
+                    }
+
+                    case inst_mod:
+                    {
+                        modInstruction();
+                        break;
+                    }
+
+                    case inst_or:
+                    {
+                        orInstruction();
+                        break;
+                    }
+
+                    case inst_xor:
+                    {
+                        xorInstruction();
+                        break;
+                    }
+
+                    case inst_and:
+                    {
+                        andInstruction();
+                        break;
+                    }
+
+                    case inst_sleft:
+                    {
+                        sleftInstruction();
+                        break;
+                    }
+
+                    case inst_sright:
+                    {
+                        srightInstruction();
+                        break;
+                    }
+
+                    case inst_comp:
+                    {
+                        compInstruction();
+                        break;
+                    }
+
+                    case inst_not:
+                    {
+                        notInstruction();
                         break;
                     }
 
                     case inst_push:
                     {
-                        // pushInstruction();
+                        pushInstruction();
                         break;
                     }
 
                     case inst_pop:
                     {
-                        // popInstruction();
+                        popInstruction();
                         break;
                     }
 
@@ -1667,61 +9571,61 @@ namespace vm
 
                     case inst_read:
                     {
-                        // readMemoryInstruction();
+                        readMemoryInstruction();
                         break;
                     }
 
                     case inst_write:
                     {
-                        // writeMemoryInstruction();
+                        writeMemoryInstruction();
                         break;
                     }
 
                     case inst_condition_or:
                     {
-                        // conditionOrInstruction();
+                        conditionOrInstruction();
                         break;
                     }
 
                     case inst_condition_and:
                     {
-                        // conditionAndInstruction();
+                        conditionAndInstruction();
                         break;
                     }
 
                     case inst_condition_equal:
                     {
-                        // conditionEqualInstruction();
+                        conditionEqualInstruction();
                         break;
                     }
 
                     case inst_condition_lower:
                     {
-                        // conditionLowerInstruction();
+                        conditionLowerInstruction();
                         break;
                     }
 
                     case inst_condition_lowerequal:
                     {
-                        //  conditionLowerEqualInstruction();
+                        conditionLowerEqualInstruction();
                         break;
                     }
 
                     case inst_condition_greater:
                     {
-                        //  conditionGreaterInstruction();
+                        conditionGreaterInstruction();
                         break;
                     }
 
                     case inst_condition_greaterequal:
                     {
-                        // conditionGreaterEqualInstruction();
+                        conditionGreaterEqualInstruction();
                         break;
                     }
 
                     case inst_condition_test:
                     {
-                        // conditionTestInstruction();
+                        conditionTestInstruction();
                         break;
                     }
 
