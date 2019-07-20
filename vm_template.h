@@ -132,9 +132,14 @@ namespace vm
     };
 
     // Number of storage registers.
-    enum register_storage_t : byte_t
+    enum register_t : byte_t
     {
         // Temporary registers.
+        register_ip,
+        register_sp,
+        register_cp,
+        register_bp,
+        register_ret,
         register_storage_temp1,
         register_storage_temp2,
         register_storage_temp3,
@@ -143,19 +148,12 @@ namespace vm
         register_storage_temp6,
         register_storage_temp7,
         register_storage_temp8,
-        register_storage_float1,
-        register_storage_float2,
-        register_storage_float3,
-        register_storage_float4,
-        register_storage_double1,
-        register_storage_double2,
-        register_storage_double3,
-        register_storage_double4,
-        // Registers for reading to usable memory.
-        register_storage_read,
-        // Registers for writing to usable memory.
-        register_storage_write,
-        num_of_storage_registers
+        register_storage_temp9,
+        register_storage_temp10,
+        register_storage_temp11,
+        register_storage_temp12,
+        register_storage_temp13,
+        num_of_registers
     };
 
     enum register_storage_slot_t : byte_t
@@ -345,7 +343,7 @@ namespace vm
     class VirtualMachine
     {
      public:
-        union cpu_storage_register_t
+        union cpu_register_t
         {
             // Unsigned
             rt<reg_8> b[8];
@@ -357,7 +355,12 @@ namespace vm
             rt<reg_16_s> s_s[4];
             rt<reg_32_s> i_s[2];
             rt<reg_64_s> l_s;
+            // TODO: support 32 bits.
+#ifdef ENVIRONMENT64
             rt<reg_pointer> p;
+#else
+            rt<reg_pointer> p[2];
+#endif
             rt<reg_float> f[2];
             rt<reg_double> d;
             rt<reg_max> m;
@@ -366,18 +369,8 @@ namespace vm
         // The virtual machine registers.
         struct cpu_registers_t
         {
-            // Register of return value.
-            rt<reg_max> reg_ret;
-            // Base stack pointer.
-            rt<reg_pointer> reg_bp;
-            // Current stack pointer.
-            rt<reg_pointer> reg_sp;
-            // Current call stack pointer.
-            rt<reg_pointer> reg_cp;
-            // Current instruction pointer.
-            rt<reg_pointer> reg_ip;
-            // Random registers for storage.
-            cpu_storage_register_t reg_strg[num_of_storage_registers];
+            // Registers.
+            cpu_register_t regs[num_of_registers];
             // Flag is used to know if previous condition was true or false.
             bool flag;
         };
@@ -410,7 +403,7 @@ namespace vm
         auto init()
         {
             // Init the return value.
-            m_CPU.reg_ret = -1;
+            m_CPU.regs[register_ret].p = -1;
 
             // Reset cpu.
             memset(&m_CPU, 0, sizeof(cpu_registers_t));
@@ -421,14 +414,14 @@ namespace vm
             // Setup stack pointer.
             // This time we will go to the lower address to the highest.
             m_pStartStackArgsVars = m_pUsableMemory;
-            m_CPU.reg_bp = m_pUsableMemory;
-            m_CPU.reg_sp = m_CPU.reg_bp;
+            m_CPU.regs[register_bp].p = m_pUsableMemory;
+            m_CPU.regs[register_sp].p = m_CPU.regs[register_bp].p;
             m_pUsableMemory += stack_size;
 
             // Setup call stack pointer.
             // Same here.
             m_pStartStackCalls = m_pUsableMemory;
-            m_CPU.reg_cp = m_pUsableMemory;
+            m_CPU.regs[register_cp].p = m_pUsableMemory;
             m_pUsableMemory += stack_size;
         }
 
@@ -438,16 +431,19 @@ namespace vm
 
             m_bPaused = false;
 
-            m_CPU.reg_ip = m_pUsableMemory +
-                           static_cast<uintptr_t>(program->getEntryPoint());
+            m_CPU.regs[register_ip].p = m_pUsableMemory +
+                                        static_cast<uintptr_t>(
+                                            program->getEntryPoint());
 
             if (args != nullptr)
             {
                 // Increment the stack.
-                m_CPU.reg_sp += args->size;
+                m_CPU.regs[register_sp].p += args->size;
 
                 // Setup the stack for the arguments.
-                memcpy(static_cast<ptr_t>(m_CPU.reg_sp), args->data, args->size);
+                memcpy(static_cast<ptr_t>(m_CPU.regs[register_sp].p),
+                       args->data,
+                       args->size);
             }
 
             run();
@@ -456,18 +452,19 @@ namespace vm
         inline auto incrementIP(size_t size)
         {
             // Increment instruction pointer.
-            m_CPU.reg_ip += size;
+            m_CPU.regs[register_ip].p += size;
         }
 
         inline auto setIP(uintptr_t p)
         {
             // Set instruction pointer.
-            m_CPU.reg_ip = p;
+            m_CPU.regs[register_ip].p = p;
         }
 
         inline auto readInstruction()
         {
-            auto instruction = *reinterpret_cast<instructions_t*>(m_CPU.reg_ip);
+            auto instruction = *reinterpret_cast<instructions_t*>(
+                m_CPU.regs[register_ip].p);
 
             incrementIP(sizeof(instruction));
 
@@ -477,19 +474,20 @@ namespace vm
             return instruction;
         }
 
-        inline auto readRegStorage(register_cast_type_t* type = nullptr,
-                                   size_t* sizeType = nullptr)
+        inline auto readReg(register_cast_type_t* type = nullptr,
+                            size_t* sizeType = nullptr)
         {
-            auto regStrg = *reinterpret_cast<register_storage_t*>(m_CPU.reg_ip);
-            incrementIP(sizeof(regStrg));
+            auto regNb = *reinterpret_cast<register_t*>(
+                m_CPU.regs[register_ip].p);
+            incrementIP(sizeof(regNb));
 
-            if (regStrg >= num_of_storage_registers)
-                static_assert("Not a storage register.");
+            if (regNb >= num_of_registers || regNb <= register_ip)
+                static_assert("Not a valid register.");
 
-            auto reg = &m_CPU.reg_strg[regStrg];
+            auto reg = &m_CPU.regs[regNb];
 
             auto slot = *reinterpret_cast<register_storage_slot_t*>(
-                m_CPU.reg_ip);
+                m_CPU.regs[register_ip].p);
             incrementIP(sizeof(slot));
 
             ptr_t slot_addr = nullptr;
@@ -808,7 +806,8 @@ namespace vm
 
         inline operation_type_t readOperationType()
         {
-            auto op = *reinterpret_cast<operation_type_t*>(m_CPU.reg_ip);
+            auto op = *reinterpret_cast<operation_type_t*>(
+                m_CPU.regs[register_ip].p);
             incrementIP(sizeof(op));
 
             if (op >= op_max)
@@ -820,7 +819,7 @@ namespace vm
         inline register_cast_type_t readCastType(size_t* sizeType = nullptr)
         {
             auto castType = *reinterpret_cast<register_cast_type_t*>(
-                m_CPU.reg_ip);
+                m_CPU.regs[register_ip].p);
             incrementIP(sizeof(castType));
 
             if (castType >= cast_max)
@@ -902,7 +901,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -918,7 +917,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -929,8 +929,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -1497,7 +1496,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -1513,7 +1512,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -1524,8 +1524,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -2092,7 +2091,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -2108,7 +2107,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -2119,8 +2119,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -2687,7 +2686,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -2703,7 +2702,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -2714,8 +2714,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -3282,7 +3281,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -3298,7 +3297,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -3309,8 +3309,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -3877,7 +3876,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -3893,7 +3892,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -3904,8 +3904,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -4334,7 +4333,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -4350,7 +4349,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -4361,8 +4361,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -4791,7 +4790,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -4807,7 +4806,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -4818,8 +4818,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -5248,7 +5247,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -5264,7 +5263,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -5275,8 +5275,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -5705,7 +5704,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -5721,7 +5720,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -5732,8 +5732,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -6162,7 +6161,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -6178,7 +6177,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -6189,8 +6189,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -6619,7 +6618,7 @@ namespace vm
 
             auto intmax = alloca(sizeof(intmax_t));
 
-            auto regResult = readRegStorage(&typeResult, &sizeRegResult);
+            auto regResult = readReg(&typeResult, &sizeRegResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -6635,7 +6634,8 @@ namespace vm
                     }
 
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
 
                     incrementIP(sizeType);
@@ -6646,8 +6646,7 @@ namespace vm
                 case op_register:
                 {
                     size_t sizeRegSecond;
-                    auto regSecond = readRegStorage(&typeSecond,
-                                                    &sizeRegSecond);
+                    auto regSecond = readReg(&typeSecond, &sizeRegSecond);
 
                     if (sizeRegResult < sizeRegSecond)
                     {
@@ -7071,7 +7070,7 @@ namespace vm
 
         inline auto notInstruction()
         {
-            auto regResult = readRegStorage();
+            auto regResult = readReg();
             auto operationType = readOperationType();
 
             bool val;
@@ -7081,7 +7080,8 @@ namespace vm
                 case op_value:
                 {
                     std::memcpy(&val,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeof(val));
 
                     incrementIP(sizeof(val));
@@ -7090,7 +7090,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage();
+                    auto regSecond = readReg();
                     val = *reinterpret_cast<bool*>(regSecond);
                     break;
                 }
@@ -7113,14 +7113,17 @@ namespace vm
                 {
                     cast = readCastType(&sizeType);
                     std::memcpy(intmax,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType);
+
+                    incrementIP(sizeType);
                     break;
                 }
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage(&cast, &sizeType);
+                    auto regSecond = readReg(&cast, &sizeType);
                     std::memcpy(intmax, regSecond, sizeType);
                     break;
                 }
@@ -7130,155 +7133,155 @@ namespace vm
             {
                 case cast_8:
                 {
-                    *reinterpret_cast<uint8_t*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<uint8_t*>(intmax);
+                    *reinterpret_cast<uint8_t*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<uint8_t*>(intmax);
                     break;
                 }
 
                 case cast_16:
                 {
-                    *reinterpret_cast<uint16_t*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<uint16_t*>(intmax);
+                    *reinterpret_cast<uint16_t*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<uint16_t*>(intmax);
                     break;
                 }
 
                 case cast_32:
                 {
-                    *reinterpret_cast<uint32_t*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<uint32_t*>(intmax);
+                    *reinterpret_cast<uint32_t*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<uint32_t*>(intmax);
                     break;
                 }
 
                 case cast_64:
                 {
-                    *reinterpret_cast<uint64_t*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<uint64_t*>(intmax);
+                    *reinterpret_cast<uint64_t*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<uint64_t*>(intmax);
                     break;
                 }
 
                 case cast_8_s:
                 {
-                    *reinterpret_cast<int8_t*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<int8_t*>(intmax);
+                    *reinterpret_cast<int8_t*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<int8_t*>(intmax);
                     break;
                 }
 
                 case cast_16_s:
                 {
-                    *reinterpret_cast<int16_t*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<int16_t*>(intmax);
+                    *reinterpret_cast<int16_t*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<int16_t*>(intmax);
                     break;
                 }
 
                 case cast_32_s:
                 {
-                    *reinterpret_cast<int32_t*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<int32_t*>(intmax);
+                    *reinterpret_cast<int32_t*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<int32_t*>(intmax);
                     break;
                 }
 
                 case cast_64_s:
                 {
-                    *reinterpret_cast<int64_t*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<int64_t*>(intmax);
+                    *reinterpret_cast<int64_t*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<int64_t*>(intmax);
                     break;
                 }
 
                 case cast_double:
                 {
-                    *reinterpret_cast<double*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<double*>(intmax);
+                    *reinterpret_cast<double*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<double*>(intmax);
                     break;
                 }
 
                 case cast_float:
                 {
-                    *reinterpret_cast<float*>(
-                        m_CPU.reg_sp) = *reinterpret_cast<float*>(intmax);
+                    *reinterpret_cast<float*>(m_CPU.regs[register_sp].p) =
+                        *reinterpret_cast<float*>(intmax);
                     break;
                 }
             }
 
-            m_CPU.reg_sp += sizeType;
+            m_CPU.regs[register_sp].p += sizeType;
         }
 
         inline auto popInstruction()
         {
             size_t sizeType;
             register_cast_type_t cast;
-            auto regResult = readRegStorage(&cast, &sizeType);
+            auto regResult = readReg(&cast, &sizeType);
 
-            m_CPU.reg_sp -= sizeType;
+            m_CPU.regs[register_sp].p -= sizeType;
 
             switch (cast)
             {
                 case cast_8:
                 {
-                    *reinterpret_cast<uint8_t*>(
-                        regResult) = *reinterpret_cast<uint8_t*>(m_CPU.reg_sp);
+                    *reinterpret_cast<uint8_t*>(regResult) =
+                        *reinterpret_cast<uint8_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_16:
                 {
-                    *reinterpret_cast<uint16_t*>(
-                        regResult) = *reinterpret_cast<uint16_t*>(m_CPU.reg_sp);
+                    *reinterpret_cast<uint16_t*>(regResult) =
+                        *reinterpret_cast<uint16_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_32:
                 {
-                    *reinterpret_cast<uint32_t*>(
-                        regResult) = *reinterpret_cast<uint32_t*>(m_CPU.reg_sp);
+                    *reinterpret_cast<uint32_t*>(regResult) =
+                        *reinterpret_cast<uint32_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_64:
                 {
-                    *reinterpret_cast<uint64_t*>(
-                        regResult) = *reinterpret_cast<uint64_t*>(m_CPU.reg_sp);
+                    *reinterpret_cast<uint64_t*>(regResult) =
+                        *reinterpret_cast<uint64_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_8_s:
                 {
-                    *reinterpret_cast<int8_t*>(
-                        regResult) = *reinterpret_cast<int8_t*>(m_CPU.reg_sp);
+                    *reinterpret_cast<int8_t*>(regResult) =
+                        *reinterpret_cast<int8_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_16_s:
                 {
-                    *reinterpret_cast<int16_t*>(
-                        regResult) = *reinterpret_cast<int16_t*>(m_CPU.reg_sp);
+                    *reinterpret_cast<int16_t*>(regResult) =
+                        *reinterpret_cast<int16_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_32_s:
                 {
-                    *reinterpret_cast<int32_t*>(
-                        regResult) = *reinterpret_cast<int32_t*>(m_CPU.reg_sp);
+                    *reinterpret_cast<int32_t*>(regResult) =
+                        *reinterpret_cast<int32_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_64_s:
                 {
-                    *reinterpret_cast<int64_t*>(
-                        regResult) = *reinterpret_cast<int64_t*>(m_CPU.reg_sp);
+                    *reinterpret_cast<int64_t*>(regResult) =
+                        *reinterpret_cast<int64_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_double:
                 {
-                    *reinterpret_cast<double*>(
-                        regResult) = *reinterpret_cast<double*>(m_CPU.reg_sp);
+                    *reinterpret_cast<double*>(regResult) =
+                        *reinterpret_cast<double*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_float:
                 {
-                    *reinterpret_cast<float*>(
-                        regResult) = *reinterpret_cast<float*>(m_CPU.reg_sp);
+                    *reinterpret_cast<float*>(regResult) =
+                        *reinterpret_cast<float*>(m_CPU.regs[register_sp].p);
                     break;
                 }
             }
@@ -7290,7 +7293,7 @@ namespace vm
 
             ptr_t intmax = nullptr;
 
-            auto regResult = readRegStorage(&typeResult);
+            auto regResult = readReg(&typeResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -7298,14 +7301,15 @@ namespace vm
                 case op_value:
                 {
                     typeSecond = readCastType();
-                    intmax = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    intmax = *reinterpret_cast<ptr_t*>(
+                        m_CPU.regs[register_ip].p);
                     incrementIP(sizeof(intmax));
                     break;
                 }
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage(&typeSecond);
+                    auto regSecond = readReg(&typeSecond);
                     intmax = *reinterpret_cast<ptr_t*>(regSecond);
                     break;
                 }
@@ -7862,7 +7866,7 @@ namespace vm
 
             ptr_t intmax = nullptr;
 
-            auto regResult = readRegStorage(&typeResult);
+            auto regResult = readReg(&typeResult);
             auto operation = readOperationType();
 
             switch (operation)
@@ -7870,14 +7874,15 @@ namespace vm
                 case op_value:
                 {
                     typeSecond = readCastType();
-                    intmax = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    intmax = *reinterpret_cast<ptr_t*>(
+                        m_CPU.regs[register_ip].p);
                     incrementIP(sizeof(intmax));
                     break;
                 }
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage(&typeSecond);
+                    auto regSecond = readReg(&typeSecond);
                     intmax = *reinterpret_cast<ptr_t*>(regSecond);
                     break;
                 }
@@ -8430,7 +8435,7 @@ namespace vm
 
         inline auto conditionOrInstruction()
         {
-            auto regResult = readRegStorage();
+            auto regResult = readReg();
             // It is a value or register
             auto operationType = readOperationType();
 
@@ -8442,7 +8447,8 @@ namespace vm
                 case op_value:
                 {
                     std::memcpy(&val,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeof(val));
 
                     incrementIP(sizeof(val));
@@ -8451,7 +8457,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage();
+                    auto regSecond = readReg();
                     val = *reinterpret_cast<bool*>(regSecond);
                     break;
                 }
@@ -8467,7 +8473,8 @@ namespace vm
                 case op_value:
                 {
                     std::memcpy(&val2,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeof(val2));
 
                     incrementIP(sizeof(val2));
@@ -8476,7 +8483,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage();
+                    auto regSecond = readReg();
                     val2 = *reinterpret_cast<bool*>(regSecond);
                     break;
                 }
@@ -8487,7 +8494,7 @@ namespace vm
 
         inline auto conditionAndInstruction()
         {
-            auto regResult = readRegStorage();
+            auto regResult = readReg();
             // It is a value or register
             auto operationType = readOperationType();
 
@@ -8499,7 +8506,8 @@ namespace vm
                 case op_value:
                 {
                     std::memcpy(&val,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeof(val));
 
                     incrementIP(sizeof(val));
@@ -8508,7 +8516,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage();
+                    auto regSecond = readReg();
                     val = *reinterpret_cast<bool*>(regSecond);
                     break;
                 }
@@ -8524,7 +8532,8 @@ namespace vm
                 case op_value:
                 {
                     std::memcpy(&val2,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeof(val2));
 
                     incrementIP(sizeof(val2));
@@ -8533,7 +8542,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage();
+                    auto regSecond = readReg();
                     val2 = *reinterpret_cast<bool*>(regSecond);
                     break;
                 }
@@ -8550,7 +8559,7 @@ namespace vm
             auto intmax1 = alloca(sizeof(intmax_t));
             auto intmax2 = alloca(sizeof(intmax_t));
 
-            auto regBoolResult = readRegStorage();
+            auto regBoolResult = readReg();
             auto operation = readOperationType();
 
             switch (operation)
@@ -8560,7 +8569,8 @@ namespace vm
                     typeFirst = readCastType(&sizeType1);
 
                     std::memcpy(intmax1,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType1);
 
                     incrementIP(sizeType1);
@@ -8570,7 +8580,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+                    auto regFirst = readReg(&typeFirst, &sizeType1);
 
                     std::memcpy(intmax1,
                                 reinterpret_cast<ptr_t>(regFirst),
@@ -8589,7 +8599,8 @@ namespace vm
                     typeSecond = readCastType(&sizeType2);
 
                     std::memcpy(intmax2,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType2);
 
                     incrementIP(sizeType2);
@@ -8599,7 +8610,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+                    auto regSecond = readReg(&typeSecond, &sizeType2);
 
                     std::memcpy(intmax2,
                                 reinterpret_cast<ptr_t>(regSecond),
@@ -8708,7 +8719,7 @@ namespace vm
             auto intmax1 = alloca(sizeof(intmax_t));
             auto intmax2 = alloca(sizeof(intmax_t));
 
-            auto regBoolResult = readRegStorage();
+            auto regBoolResult = readReg();
             auto operation = readOperationType();
 
             switch (operation)
@@ -8718,7 +8729,8 @@ namespace vm
                     typeFirst = readCastType(&sizeType1);
 
                     std::memcpy(intmax1,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType1);
 
                     incrementIP(sizeType1);
@@ -8728,7 +8740,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+                    auto regFirst = readReg(&typeFirst, &sizeType1);
 
                     std::memcpy(intmax1,
                                 reinterpret_cast<ptr_t>(regFirst),
@@ -8747,7 +8759,8 @@ namespace vm
                     typeSecond = readCastType(&sizeType2);
 
                     std::memcpy(intmax2,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType2);
 
                     incrementIP(sizeType2);
@@ -8757,7 +8770,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+                    auto regSecond = readReg(&typeSecond, &sizeType2);
 
                     std::memcpy(intmax2,
                                 reinterpret_cast<ptr_t>(regSecond),
@@ -8866,7 +8879,7 @@ namespace vm
             auto intmax1 = alloca(sizeof(intmax_t));
             auto intmax2 = alloca(sizeof(intmax_t));
 
-            auto regBoolResult = readRegStorage();
+            auto regBoolResult = readReg();
             auto operation = readOperationType();
 
             switch (operation)
@@ -8876,7 +8889,8 @@ namespace vm
                     typeFirst = readCastType(&sizeType1);
 
                     std::memcpy(intmax1,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType1);
 
                     incrementIP(sizeType1);
@@ -8886,7 +8900,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+                    auto regFirst = readReg(&typeFirst, &sizeType1);
 
                     std::memcpy(intmax1,
                                 reinterpret_cast<ptr_t>(regFirst),
@@ -8905,7 +8919,8 @@ namespace vm
                     typeSecond = readCastType(&sizeType2);
 
                     std::memcpy(intmax2,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType2);
 
                     incrementIP(sizeType2);
@@ -8915,7 +8930,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+                    auto regSecond = readReg(&typeSecond, &sizeType2);
 
                     std::memcpy(intmax2,
                                 reinterpret_cast<ptr_t>(regSecond),
@@ -9024,7 +9039,7 @@ namespace vm
             auto intmax1 = alloca(sizeof(intmax_t));
             auto intmax2 = alloca(sizeof(intmax_t));
 
-            auto regBoolResult = readRegStorage();
+            auto regBoolResult = readReg();
             auto operation = readOperationType();
 
             switch (operation)
@@ -9034,7 +9049,8 @@ namespace vm
                     typeFirst = readCastType(&sizeType1);
 
                     std::memcpy(intmax1,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType1);
 
                     incrementIP(sizeType1);
@@ -9044,7 +9060,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+                    auto regFirst = readReg(&typeFirst, &sizeType1);
 
                     std::memcpy(intmax1,
                                 reinterpret_cast<ptr_t>(regFirst),
@@ -9063,7 +9079,8 @@ namespace vm
                     typeSecond = readCastType(&sizeType2);
 
                     std::memcpy(intmax2,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType2);
 
                     incrementIP(sizeType2);
@@ -9073,7 +9090,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+                    auto regSecond = readReg(&typeSecond, &sizeType2);
 
                     std::memcpy(intmax2,
                                 reinterpret_cast<ptr_t>(regSecond),
@@ -9182,7 +9199,7 @@ namespace vm
             auto intmax1 = alloca(sizeof(intmax_t));
             auto intmax2 = alloca(sizeof(intmax_t));
 
-            auto regBoolResult = readRegStorage();
+            auto regBoolResult = readReg();
             auto operation = readOperationType();
 
             switch (operation)
@@ -9192,7 +9209,8 @@ namespace vm
                     typeFirst = readCastType(&sizeType1);
 
                     std::memcpy(intmax1,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType1);
 
                     incrementIP(sizeType1);
@@ -9202,7 +9220,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regFirst = readRegStorage(&typeFirst, &sizeType1);
+                    auto regFirst = readReg(&typeFirst, &sizeType1);
 
                     std::memcpy(intmax1,
                                 reinterpret_cast<ptr_t>(regFirst),
@@ -9221,7 +9239,8 @@ namespace vm
                     typeSecond = readCastType(&sizeType2);
 
                     std::memcpy(intmax2,
-                                reinterpret_cast<ptr_t>(m_CPU.reg_ip),
+                                reinterpret_cast<ptr_t>(
+                                    m_CPU.regs[register_ip].p),
                                 sizeType2);
 
                     incrementIP(sizeType2);
@@ -9231,7 +9250,7 @@ namespace vm
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage(&typeSecond, &sizeType2);
+                    auto regSecond = readReg(&typeSecond, &sizeType2);
 
                     std::memcpy(intmax2,
                                 reinterpret_cast<ptr_t>(regSecond),
@@ -9334,7 +9353,7 @@ namespace vm
 
         inline auto conditionTestInstruction()
         {
-            auto regResult = readRegStorage();
+            auto regResult = readReg();
 
             if (*reinterpret_cast<bool*>(regResult))
                 m_CPU.flag = true;
@@ -9349,14 +9368,15 @@ namespace vm
             {
                 case op_value:
                 {
-                    jump1 = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    jump1 = *reinterpret_cast<ptr_t*>(
+                        m_CPU.regs[register_ip].p);
                     incrementIP(sizeof(ptr_t));
                     break;
                 }
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage();
+                    auto regSecond = readReg();
                     jump1 = *reinterpret_cast<ptr_t*>(regSecond);
                     break;
                 }
@@ -9370,14 +9390,15 @@ namespace vm
             {
                 case op_value:
                 {
-                    jump2 = *reinterpret_cast<ptr_t*>(m_CPU.reg_ip);
+                    jump2 = *reinterpret_cast<ptr_t*>(
+                        m_CPU.regs[register_ip].p);
                     incrementIP(sizeof(ptr_t));
                     break;
                 }
 
                 case op_register:
                 {
-                    auto regSecond = readRegStorage();
+                    auto regSecond = readReg();
                     jump2 = *reinterpret_cast<ptr_t*>(regSecond);
                     break;
                 }
@@ -9388,11 +9409,11 @@ namespace vm
 
             if (m_CPU.flag)
             {
-                m_CPU.reg_ip = reinterpret_cast<uintptr_t>(jump1);
+                m_CPU.regs[register_ip].p = reinterpret_cast<uintptr_t>(jump1);
             }
             else
             {
-                m_CPU.reg_ip = reinterpret_cast<uintptr_t>(jump2);
+                m_CPU.regs[register_ip].p = reinterpret_cast<uintptr_t>(jump2);
             }
         }
 
@@ -9506,21 +9527,22 @@ namespace vm
 
                     case inst_jmp:
                     {
-                        auto regResult = readRegStorage();
-                        m_CPU.reg_ip = *reinterpret_cast<rt<reg_pointer>*>(
-                            regResult);
+                        auto regResult = readReg();
+                        m_CPU.regs[register_ip].p =
+                            *reinterpret_cast<rt<reg_pointer>*>(regResult);
                         break;
                     }
 
                     case inst_call:
                     {
-                        auto regResult = readRegStorage();
-                        auto savedIp = m_CPU.reg_ip;
-                        m_CPU.reg_ip = *reinterpret_cast<rt<reg_pointer>*>(
-                            regResult);
-                        *reinterpret_cast<uintptr_t*>(m_CPU.reg_cp) = savedIp;
+                        auto regResult = readReg();
+                        auto savedIp = m_CPU.regs[register_ip].p;
+                        m_CPU.regs[register_ip].p =
+                            *reinterpret_cast<rt<reg_pointer>*>(regResult);
+                        *reinterpret_cast<uintptr_t*>(
+                            m_CPU.regs[register_cp].p) = savedIp;
                         // Save ip this time into the call stack.
-                        m_CPU.reg_cp += sizeof(savedIp);
+                        m_CPU.regs[register_cp].p += sizeof(savedIp);
                         break;
                     }
 
@@ -9528,9 +9550,11 @@ namespace vm
                     {
                         // Set the instruction pointer of the previous call into
                         // the call stack
-                        m_CPU.reg_cp -= sizeof(m_CPU.reg_ip);
-                        m_CPU.reg_ip = *reinterpret_cast<uintptr_t*>(
-                            m_CPU.reg_cp);
+                        m_CPU.regs[register_cp].p -= sizeof(
+                            m_CPU.regs[register_ip].p);
+                        m_CPU.regs[register_ip].p =
+                            *reinterpret_cast<uintptr_t*>(
+                                m_CPU.regs[register_cp].p);
                         break;
                     }
 
@@ -9546,9 +9570,9 @@ namespace vm
                                 size_t sizeType = 0;
                                 readCastType(&sizeType);
 
-                                std::memcpy(&m_CPU.reg_ret,
+                                std::memcpy(&m_CPU.regs[register_ret].p,
                                             reinterpret_cast<ptr_t>(
-                                                m_CPU.reg_ip),
+                                                m_CPU.regs[register_ip].p),
                                             sizeType);
 
                                 incrementIP(sizeType);
@@ -9558,10 +9582,11 @@ namespace vm
                             case op_register:
                             {
                                 size_t sizeType = 0;
-                                auto regSecond = readRegStorage(nullptr,
-                                                                &sizeType);
+                                auto regSecond = readReg(nullptr, &sizeType);
 
-                                std::memcpy(&m_CPU.reg_ret, regSecond, sizeType);
+                                std::memcpy(&m_CPU.regs[register_ret].p,
+                                            regSecond,
+                                            sizeType);
                                 break;
                             }
                         }
@@ -9637,20 +9662,20 @@ namespace vm
                 }
             }
 
-            return &m_CPU.reg_ret;
+            return &m_CPU.regs[register_ret].p;
         }
 
         // Check if exceeding the stacks.
         auto checkStacks()
         {
-            if (m_CPU.reg_cp >= m_pStartStackCalls &&
-                m_CPU.reg_cp < m_pStartStackCalls + stack_size)
+            if (m_CPU.regs[register_cp].p >= m_pStartStackCalls &&
+                m_CPU.regs[register_cp].p < m_pStartStackCalls + stack_size)
             {
                 return true;
             }
 
-            if (m_CPU.reg_sp >= m_pStartStackArgsVars &&
-                m_CPU.reg_sp < m_pStartStackArgsVars + stack_size)
+            if (m_CPU.regs[register_sp].p >= m_pStartStackArgsVars &&
+                m_CPU.regs[register_sp].p < m_pStartStackArgsVars + stack_size)
             {
                 return true;
             }
@@ -9661,8 +9686,8 @@ namespace vm
         // Check if exceeding the code section.
         auto checkCode()
         {
-            return (m_CPU.reg_ip >= m_pUsableMemory &&
-                    m_CPU.reg_ip <
+            return (m_CPU.regs[register_ip].p >= m_pUsableMemory &&
+                    m_CPU.regs[register_ip].p <
                         (reinterpret_cast<uintptr_t>(m_RAM) + ram_size));
         }
     };
