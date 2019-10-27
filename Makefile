@@ -1,5 +1,5 @@
 
-CXX = g++-9
+CXX = g++
 
 # VM_TEST
 VM_TEST=vm_test.out

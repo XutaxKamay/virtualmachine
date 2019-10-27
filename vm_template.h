@@ -102,6 +102,7 @@ namespace vm
         cast_16_s,
         cast_32_s,
         cast_64_s,
+        cast_pointer,
         cast_max
     };
 
@@ -234,7 +235,7 @@ namespace vm
         if constexpr (reg == reg_max)
             return get_type<uintmax_t>;
 
-        static_assert("Unknown register size");
+        assert("Unknown register size");
     };
 
     template <register_type_t reg>
@@ -260,7 +261,7 @@ namespace vm
             return reg_pointer;
         }
 
-        static_assert("Unknown register type");
+        assert("Unknown register type");
     }
 
     template <typename T>
@@ -337,6 +338,7 @@ namespace vm
     class Compiler
     {
      public:
+            
     };
 
     template <size_t ram_size = default_ram_size>
@@ -446,6 +448,10 @@ namespace vm
                        args->size);
             }
 
+            // Process relocations.
+
+            // Process data.
+
             run();
         }
 
@@ -469,7 +475,7 @@ namespace vm
             incrementIP(sizeof(instruction));
 
             if (instruction >= inst_max)
-                static_assert("Unknown instruction.");
+                assert("Unknown instruction.");
 
             return instruction;
         }
@@ -482,7 +488,7 @@ namespace vm
             incrementIP(sizeof(regNb));
 
             if (regNb >= num_of_registers || regNb <= register_ip)
-                static_assert("Not a valid register.");
+                assert("Not a valid register.");
 
             auto reg = &m_CPU.regs[regNb];
 
@@ -798,7 +804,7 @@ namespace vm
 
             if (slot_addr == nullptr)
             {
-                static_assert("Unknown register slot.");
+                assert("Unknown register slot.");
             }
 
             return slot_addr;
@@ -811,7 +817,7 @@ namespace vm
             incrementIP(sizeof(op));
 
             if (op >= op_max)
-                static_assert("Unknown operation type.");
+                assert("Unknown operation type.");
 
             return op;
         }
@@ -823,7 +829,7 @@ namespace vm
             incrementIP(sizeof(castType));
 
             if (castType >= cast_max)
-                static_assert("Unknown cast.");
+                assert("Unknown cast.");
 
             if (sizeType != nullptr)
             {
@@ -913,7 +919,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -933,7 +939,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -952,15 +958,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) +=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) += *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) +=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) += *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -974,29 +980,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) +=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) += *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) +=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) += *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) +=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) += *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) +=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) += *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -1010,51 +1016,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) += static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -1068,73 +1073,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) +=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) += *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) +=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) += *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) +=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) += *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) +=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) += static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) +=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) += static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -1147,15 +1150,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) +=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) += *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) +=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) += *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -1169,29 +1172,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) +=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) += *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) +=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) += *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) +=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) += *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) +=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) += *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -1205,51 +1208,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) +=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) += *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) +=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) += *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) +=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) += *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) +=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) += *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) +=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) += *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) +=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) += *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) +=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) += static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -1263,73 +1265,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) += *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) += *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) += *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) += *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) += *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) += *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) += *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) += *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) += static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) +=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) += static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -1343,80 +1343,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) += static_cast<
+                                double>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                static_cast<double>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) += static_cast<
+                                double>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) += static_cast<
+                                double>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                static_cast<double>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) += static_cast<
+                                double>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) += static_cast<
+                                double>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                static_cast<double>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) += static_cast<
+                                double>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) += static_cast<
+                                double>(*reinterpret_cast<uint64_t*>(intmax));
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                static_cast<double>(
-                                    *reinterpret_cast<int64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) += static_cast<
+                                double>(*reinterpret_cast<int64_t*>(intmax));
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                static_cast<double>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<double*>(regResult) += static_cast<
+                                double>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<double*>(regResult) +=
-                                *reinterpret_cast<double*>(intmax);
+                            *reinterpret_cast<double*>(
+                                regResult) += *reinterpret_cast<double*>(intmax);
                             break;
                         }
                     }
@@ -1430,49 +1421,43 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<float*>(regResult) +=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) += static_cast<
+                                float>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<float*>(regResult) +=
-                                static_cast<float>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) += static_cast<
+                                float>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<float*>(regResult) +=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) += static_cast<
+                                float>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<float*>(regResult) +=
-                                static_cast<float>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) += static_cast<
+                                float>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<float*>(regResult) +=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) += static_cast<
+                                float>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<float*>(regResult) +=
-                                static_cast<float>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) += static_cast<
+                                float>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
@@ -1508,7 +1493,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -1528,7 +1513,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -1547,15 +1532,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) -=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) -= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) -=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) -= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -1569,29 +1554,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) -=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) -= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) -=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) -= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) -=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) -= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) -=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) -= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -1605,51 +1590,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) -= static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -1663,73 +1647,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) -=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) -= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) -=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) -= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) -=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) -= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) -=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) -= static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) -=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) -= static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -1742,15 +1724,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) -=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) -= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) -=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) -= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -1764,29 +1746,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) -=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) -= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) -=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) -= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) -=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) -= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) -=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) -= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -1800,51 +1782,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) -=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) -= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) -=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) -= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) -=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) -= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) -=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) -= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) -=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) -= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) -=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) -= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) -=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) -= static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -1858,73 +1839,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) -= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) -= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) -= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) -= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) -= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) -= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) -= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) -= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) -= static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) -=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) -= static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -1938,80 +1917,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) -= static_cast<
+                                double>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                static_cast<double>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) -= static_cast<
+                                double>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) -= static_cast<
+                                double>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                static_cast<double>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) -= static_cast<
+                                double>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) -= static_cast<
+                                double>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                static_cast<double>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) -= static_cast<
+                                double>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) -= static_cast<
+                                double>(*reinterpret_cast<uint64_t*>(intmax));
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                static_cast<double>(
-                                    *reinterpret_cast<int64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) -= static_cast<
+                                double>(*reinterpret_cast<int64_t*>(intmax));
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                static_cast<double>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<double*>(regResult) -= static_cast<
+                                double>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<double*>(regResult) -=
-                                *reinterpret_cast<double*>(intmax);
+                            *reinterpret_cast<double*>(
+                                regResult) -= *reinterpret_cast<double*>(intmax);
                             break;
                         }
                     }
@@ -2025,49 +1995,43 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<float*>(regResult) -=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) -= static_cast<
+                                float>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<float*>(regResult) -=
-                                static_cast<float>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) -= static_cast<
+                                float>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<float*>(regResult) -=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) -= static_cast<
+                                float>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<float*>(regResult) -=
-                                static_cast<float>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) -= static_cast<
+                                float>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<float*>(regResult) -=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) -= static_cast<
+                                float>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<float*>(regResult) -=
-                                static_cast<float>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) -= static_cast<
+                                float>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
@@ -2103,7 +2067,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -2123,7 +2087,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -2142,15 +2106,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) /=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) /= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) /=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) /= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -2164,29 +2128,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) /=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) /= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) /=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) /= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) /=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) /= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) /=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) /= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -2200,51 +2164,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) /= static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -2258,73 +2221,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) /=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) /= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) /=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) /= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) /=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) /= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) /=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) /= static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) /=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) /= static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -2337,15 +2298,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) /=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) /= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) /=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) /= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -2359,29 +2320,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) /=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) /= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) /=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) /= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) /=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) /= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) /=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) /= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -2395,51 +2356,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) /=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) /= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) /=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) /= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) /=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) /= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) /=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) /= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) /=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) /= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) /=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) /= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) /=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) /= static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -2453,73 +2413,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) /= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) /= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) /= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) /= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) /= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) /= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) /= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) /= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) /= static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) /=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) /= static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -2533,80 +2491,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) /= static_cast<
+                                double>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                static_cast<double>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) /= static_cast<
+                                double>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) /= static_cast<
+                                double>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                static_cast<double>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) /= static_cast<
+                                double>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) /= static_cast<
+                                double>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                static_cast<double>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) /= static_cast<
+                                double>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) /= static_cast<
+                                double>(*reinterpret_cast<uint64_t*>(intmax));
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                static_cast<double>(
-                                    *reinterpret_cast<int64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) /= static_cast<
+                                double>(*reinterpret_cast<int64_t*>(intmax));
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                static_cast<double>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<double*>(regResult) /= static_cast<
+                                double>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<double*>(regResult) /=
-                                *reinterpret_cast<double*>(intmax);
+                            *reinterpret_cast<double*>(
+                                regResult) /= *reinterpret_cast<double*>(intmax);
                             break;
                         }
                     }
@@ -2620,49 +2569,43 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<float*>(regResult) /=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) /= static_cast<
+                                float>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<float*>(regResult) /=
-                                static_cast<float>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) /= static_cast<
+                                float>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<float*>(regResult) /=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) /= static_cast<
+                                float>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<float*>(regResult) /=
-                                static_cast<float>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) /= static_cast<
+                                float>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<float*>(regResult) /=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) /= static_cast<
+                                float>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<float*>(regResult) /=
-                                static_cast<float>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) /= static_cast<
+                                float>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
@@ -2698,7 +2641,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -2718,7 +2661,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -2737,15 +2680,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) *=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) *= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) *=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) *= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -2759,29 +2702,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) *=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) *= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) *=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) *= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) *=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) *= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) *=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) *= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -2795,51 +2738,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) *= static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -2853,73 +2795,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) *=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) *= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) *=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) *= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) *=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) *= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) *=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) *= static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) *=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) *= static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -2932,15 +2872,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) *=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) *= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) *=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) *= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -2954,29 +2894,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) *=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) *= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) *=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) *= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) *=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) *= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) *=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) *= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -2990,51 +2930,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) *=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) *= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) *=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) *= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) *=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) *= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) *=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) *= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) *=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) *= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) *=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) *= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) *=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) *= static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -3048,73 +2987,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) *= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) *= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) *= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) *= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) *= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) *= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) *= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) *= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) *= static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) *=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) *= static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -3128,80 +3065,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) *= static_cast<
+                                double>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                static_cast<double>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) *= static_cast<
+                                double>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) *= static_cast<
+                                double>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                static_cast<double>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) *= static_cast<
+                                double>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) *= static_cast<
+                                double>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                static_cast<double>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) *= static_cast<
+                                double>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                static_cast<double>(
-                                    *reinterpret_cast<uint64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) *= static_cast<
+                                double>(*reinterpret_cast<uint64_t*>(intmax));
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                static_cast<double>(
-                                    *reinterpret_cast<int64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) *= static_cast<
+                                double>(*reinterpret_cast<int64_t*>(intmax));
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                static_cast<double>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<double*>(regResult) *= static_cast<
+                                double>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<double*>(regResult) *=
-                                *reinterpret_cast<double*>(intmax);
+                            *reinterpret_cast<double*>(
+                                regResult) *= *reinterpret_cast<double*>(intmax);
                             break;
                         }
                     }
@@ -3215,49 +3143,43 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<float*>(regResult) *=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) *= static_cast<
+                                float>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<float*>(regResult) *=
-                                static_cast<float>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) *= static_cast<
+                                float>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<float*>(regResult) *=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) *= static_cast<
+                                float>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<float*>(regResult) *=
-                                static_cast<float>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) *= static_cast<
+                                float>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<float*>(regResult) *=
-                                static_cast<float>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) *= static_cast<
+                                float>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<float*>(regResult) *=
-                                static_cast<float>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) *= static_cast<
+                                float>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
@@ -3293,7 +3215,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -3313,7 +3235,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -3332,8 +3254,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -3354,8 +3276,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -3368,15 +3290,15 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -3390,8 +3312,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -3404,37 +3326,36 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) = static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -3448,8 +3369,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -3462,59 +3383,57 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) = *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) = *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) = static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) = static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -3527,8 +3446,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -3549,8 +3468,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -3563,15 +3482,15 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -3585,8 +3504,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -3599,37 +3518,36 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) = static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -3643,8 +3561,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -3657,59 +3575,57 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) = static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) = static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -3723,73 +3639,64 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<uint64_t*>(intmax));
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<int64_t*>(intmax));
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
@@ -3810,49 +3717,43 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
@@ -3888,7 +3789,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -3908,7 +3809,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -3927,15 +3828,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) %=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) %= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) %=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) %= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -3949,29 +3850,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) %=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) %= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) %=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) %= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) %=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) %= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) %=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) %= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -3985,51 +3886,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) %= static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -4043,73 +3943,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) %=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) %= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) %=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) %= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) %=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) %= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) %=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) %= static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) %=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) %= static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -4122,15 +4020,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) %=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) %= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) %=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) %= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -4144,29 +4042,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) %=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) %= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) %=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) %= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) %=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) %= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) %=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) %= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -4180,51 +4078,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) %=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) %= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) %=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) %= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) %=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) %= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) %=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) %= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) %=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) %= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) %=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) %= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) %=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) %= static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -4238,73 +4135,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) %= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) %= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) %= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) %= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) %= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) %= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) %= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) %= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) %= static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) %=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) %= static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -4314,13 +4209,13 @@ namespace vm
 
                 case cast_double:
                 {
-                    static_assert("Can't do mod operation on double.");
+                    assert("Can't do mod operation on double.");
                     break;
                 }
 
                 case cast_float:
                 {
-                    static_assert("Can't do mod operation on float.");
+                    assert("Can't do mod operation on float.");
                     break;
                 }
             }
@@ -4345,7 +4240,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -4365,7 +4260,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -4384,15 +4279,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) |=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) |= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) |=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) |= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -4406,29 +4301,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) |=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) |= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) |=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) |= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) |=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) |= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) |=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) |= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -4442,51 +4337,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) |= static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -4500,73 +4394,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) |=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) |= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) |=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) |= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) |=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) |= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) |=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) |= static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) |=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) |= static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -4579,15 +4471,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) |=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) |= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) |=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) |= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -4601,29 +4493,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) |=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) |= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) |=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) |= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) |=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) |= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) |=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) |= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -4637,51 +4529,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) |=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) |= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) |=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) |= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) |=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) |= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) |=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) |= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) |=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) |= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) |=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) |= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) |=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) |= static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -4695,73 +4586,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) |= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) |= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) |= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) |= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) |= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) |= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) |= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) |= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) |= static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) |=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) |= static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -4771,13 +4660,13 @@ namespace vm
 
                 case cast_double:
                 {
-                    static_assert("Can't do or operation on double.");
+                    assert("Can't do or operation on double.");
                     break;
                 }
 
                 case cast_float:
                 {
-                    static_assert("Can't do or operation on float.");
+                    assert("Can't do or operation on float.");
                     break;
                 }
             }
@@ -4802,7 +4691,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -4822,7 +4711,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -4841,15 +4730,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) ^=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) ^= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) ^=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) ^= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -4863,29 +4752,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) ^=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) ^= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) ^=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) ^= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) ^=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) ^= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) ^=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) ^= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -4899,51 +4788,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) ^= static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -4957,73 +4845,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) ^=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) ^= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) ^=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) ^= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) ^=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) ^= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) ^=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) ^= static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) ^=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) ^= static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -5036,15 +4922,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) ^=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) ^= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) ^=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) ^= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -5058,29 +4944,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) ^=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) ^= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) ^=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) ^= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) ^=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) ^= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) ^=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) ^= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -5094,51 +4980,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) ^=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) ^= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) ^=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) ^= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) ^=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) ^= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) ^=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) ^= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) ^=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) ^= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) ^=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) ^= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) ^=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) ^= static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -5152,73 +5037,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) ^= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) ^= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) ^= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) ^= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) ^= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) ^= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) ^= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) ^= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) ^= static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) ^=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) ^= static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -5228,13 +5111,13 @@ namespace vm
 
                 case cast_double:
                 {
-                    static_assert("Can't do xor operation on double.");
+                    assert("Can't do xor operation on double.");
                     break;
                 }
 
                 case cast_float:
                 {
-                    static_assert("Can't do xor operation on float.");
+                    assert("Can't do xor operation on float.");
                     break;
                 }
             }
@@ -5259,7 +5142,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -5279,7 +5162,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -5298,15 +5181,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) &=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) &= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) &=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) &= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -5320,29 +5203,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) &=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) &= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) &=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) &= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) &=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) &= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) &=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) &= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -5356,51 +5239,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) &= static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -5414,73 +5296,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) &=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) &= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) &=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) &= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) &=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) &= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) &=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) &= static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) &=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) &= static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -5493,15 +5373,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) &=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) &= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) &=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) &= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -5515,29 +5395,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) &=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) &= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) &=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) &= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) &=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) &= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) &=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) &= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -5551,51 +5431,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) &=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) &= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) &=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) &= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) &=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) &= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) &=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) &= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) &=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) &= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) &=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) &= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) &=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) &= static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -5609,73 +5488,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) &= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) &= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) &= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) &= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) &= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) &= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) &= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) &= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) &= static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) &=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) &= static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -5685,13 +5562,13 @@ namespace vm
 
                 case cast_double:
                 {
-                    static_assert("Can't do and operation on double.");
+                    assert("Can't do and operation on double.");
                     break;
                 }
 
                 case cast_float:
                 {
-                    static_assert("Can't do and operation on float.");
+                    assert("Can't do and operation on float.");
                     break;
                 }
             }
@@ -5716,7 +5593,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -5736,7 +5613,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -5755,15 +5632,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) <<=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) <<= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) <<=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) <<= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -5777,29 +5654,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) <<=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) <<= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) <<=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) <<= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) <<=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) <<= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) <<=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) <<= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -5813,51 +5690,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) <<= static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -5871,73 +5747,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) <<=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) <<= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) <<=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) <<= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) <<=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) <<= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) <<=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) <<= static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) <<=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) <<= static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -5950,15 +5824,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) <<=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) <<= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) <<=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) <<= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -5972,29 +5846,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) <<=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) <<= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) <<=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) <<= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) <<=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) <<= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) <<=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) <<= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -6008,51 +5882,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) <<=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) <<= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) <<=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) <<= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) <<=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) <<= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) <<=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) <<= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) <<=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) <<= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) <<=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) <<= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) <<=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) <<= static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -6066,73 +5939,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) <<= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) <<= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) <<= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) <<= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) <<= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) <<= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) <<= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) <<= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) <<= static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) <<=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) <<= static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -6142,13 +6013,13 @@ namespace vm
 
                 case cast_double:
                 {
-                    static_assert("Can't do sleft operation on double.");
+                    assert("Can't do sleft operation on double.");
                     break;
                 }
 
                 case cast_float:
                 {
-                    static_assert("Can't do sleft operation on float.");
+                    assert("Can't do sleft operation on float.");
                     break;
                 }
             }
@@ -6173,7 +6044,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -6193,7 +6064,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -6212,15 +6083,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) >>=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) >>= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) >>=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) >>= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -6234,29 +6105,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) >>=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) >>= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) >>=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) >>= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) >>=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) >>= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) >>=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) >>= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -6270,51 +6141,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) >>= static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -6328,73 +6198,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) >>=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) >>= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) >>=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) >>= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) >>=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) >>= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) >>=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) >>= static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) >>=
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) >>= static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -6407,15 +6275,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) >>=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) >>= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) >>=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) >>= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -6429,29 +6297,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) >>=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) >>= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) >>=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) >>= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) >>=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) >>= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) >>=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) >>= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -6465,51 +6333,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) >>=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) >>= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) >>=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) >>= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) >>=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) >>= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) >>=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) >>= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) >>=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) >>= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) >>=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) >>= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) >>=
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) >>= static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -6523,73 +6390,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) >>= *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                *reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) >>= *reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) >>= *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) >>= *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) >>= *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) >>= *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) >>= *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) >>= *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) >>= static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) >>=
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) >>= static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -6599,13 +6464,13 @@ namespace vm
 
                 case cast_double:
                 {
-                    static_assert("Can't do sright operation on double.");
+                    assert("Can't do sright operation on double.");
                     break;
                 }
 
                 case cast_float:
                 {
-                    static_assert("Can't do sright operation on float.");
+                    assert("Can't do sright operation on float.");
                     break;
                 }
             }
@@ -6630,7 +6495,7 @@ namespace vm
 
                     if (sizeRegResult < sizeType)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -6650,7 +6515,7 @@ namespace vm
 
                     if (sizeRegResult < sizeRegSecond)
                     {
-                        static_assert("Can't do operation, size is higher.");
+                        assert("Can't do operation, size is higher.");
                     }
 
                     std::memcpy(intmax,
@@ -6669,15 +6534,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) =
-                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) = ~*reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) =
-                                ~*reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) = ~*reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -6691,29 +6556,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = ~*reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                ~*reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = ~*reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = ~*reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                ~*reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = ~*reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -6727,51 +6592,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) = ~static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -6785,73 +6649,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                ~*reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = ~*reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                ~*reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) = ~*reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                ~*reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) = ~*reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                ~static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) = ~static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                ~static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) = ~static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -6864,15 +6726,15 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) =
-                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) = ~*reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) =
-                                ~*reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) = ~*reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
                     }
@@ -6886,29 +6748,29 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = ~*reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                ~*reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = ~*reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = ~*reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                ~*reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = ~*reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -6922,51 +6784,50 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = ~*reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                ~*reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = ~*reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = ~*reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                ~*reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = ~*reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                ~*reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = ~*reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                ~*reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = ~*reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                ~static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) = ~static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -6980,73 +6841,71 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~*reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = ~*reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~*reinterpret_cast<int8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = ~*reinterpret_cast<int8_t*>(intmax);
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~*reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = ~*reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~*reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = ~*reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~*reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = ~*reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~*reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = ~*reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~*reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = ~*reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~*reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = ~*reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) = ~static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                ~static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) = ~static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -7056,13 +6915,13 @@ namespace vm
 
                 case cast_double:
                 {
-                    static_assert("Can't do comp operation on double.");
+                    assert("Can't do comp operation on double.");
                     break;
                 }
 
                 case cast_float:
                 {
-                    static_assert("Can't do comp operation on float.");
+                    assert("Can't do comp operation on float.");
                     break;
                 }
             }
@@ -7133,71 +6992,81 @@ namespace vm
             {
                 case cast_8:
                 {
-                    *reinterpret_cast<uint8_t*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<uint8_t*>(intmax);
+                    *reinterpret_cast<uint8_t*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<uint8_t*>(intmax);
                     break;
                 }
 
                 case cast_16:
                 {
-                    *reinterpret_cast<uint16_t*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<uint16_t*>(intmax);
+                    *reinterpret_cast<uint16_t*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<uint16_t*>(intmax);
                     break;
                 }
 
                 case cast_32:
                 {
-                    *reinterpret_cast<uint32_t*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<uint32_t*>(intmax);
+                    *reinterpret_cast<uint32_t*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<uint32_t*>(intmax);
                     break;
                 }
 
                 case cast_64:
                 {
-                    *reinterpret_cast<uint64_t*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<uint64_t*>(intmax);
+                    *reinterpret_cast<uint64_t*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<uint64_t*>(intmax);
                     break;
                 }
 
                 case cast_8_s:
                 {
-                    *reinterpret_cast<int8_t*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<int8_t*>(intmax);
+                    *reinterpret_cast<int8_t*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<int8_t*>(intmax);
                     break;
                 }
 
                 case cast_16_s:
                 {
-                    *reinterpret_cast<int16_t*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<int16_t*>(intmax);
+                    *reinterpret_cast<int16_t*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<int16_t*>(intmax);
                     break;
                 }
 
                 case cast_32_s:
                 {
-                    *reinterpret_cast<int32_t*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<int32_t*>(intmax);
+                    *reinterpret_cast<int32_t*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<int32_t*>(intmax);
                     break;
                 }
 
                 case cast_64_s:
                 {
-                    *reinterpret_cast<int64_t*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<int64_t*>(intmax);
+                    *reinterpret_cast<int64_t*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<int64_t*>(intmax);
                     break;
                 }
 
                 case cast_double:
                 {
-                    *reinterpret_cast<double*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<double*>(intmax);
+                    *reinterpret_cast<double*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<double*>(intmax);
                     break;
                 }
 
                 case cast_float:
                 {
-                    *reinterpret_cast<float*>(m_CPU.regs[register_sp].p) =
-                        *reinterpret_cast<float*>(intmax);
+                    *reinterpret_cast<float*>(
+                        m_CPU.regs[register_sp]
+                            .p) = *reinterpret_cast<float*>(intmax);
                     break;
                 }
             }
@@ -7217,71 +7086,71 @@ namespace vm
             {
                 case cast_8:
                 {
-                    *reinterpret_cast<uint8_t*>(regResult) =
-                        *reinterpret_cast<uint8_t*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<uint8_t*>(regResult) = *reinterpret_cast<
+                        uint8_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_16:
                 {
-                    *reinterpret_cast<uint16_t*>(regResult) =
-                        *reinterpret_cast<uint16_t*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<uint16_t*>(regResult) = *reinterpret_cast<
+                        uint16_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_32:
                 {
-                    *reinterpret_cast<uint32_t*>(regResult) =
-                        *reinterpret_cast<uint32_t*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<uint32_t*>(regResult) = *reinterpret_cast<
+                        uint32_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_64:
                 {
-                    *reinterpret_cast<uint64_t*>(regResult) =
-                        *reinterpret_cast<uint64_t*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<uint64_t*>(regResult) = *reinterpret_cast<
+                        uint64_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_8_s:
                 {
-                    *reinterpret_cast<int8_t*>(regResult) =
-                        *reinterpret_cast<int8_t*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<int8_t*>(regResult) = *reinterpret_cast<
+                        int8_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_16_s:
                 {
-                    *reinterpret_cast<int16_t*>(regResult) =
-                        *reinterpret_cast<int16_t*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<int16_t*>(regResult) = *reinterpret_cast<
+                        int16_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_32_s:
                 {
-                    *reinterpret_cast<int32_t*>(regResult) =
-                        *reinterpret_cast<int32_t*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<int32_t*>(regResult) = *reinterpret_cast<
+                        int32_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_64_s:
                 {
-                    *reinterpret_cast<int64_t*>(regResult) =
-                        *reinterpret_cast<int64_t*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<int64_t*>(regResult) = *reinterpret_cast<
+                        int64_t*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_double:
                 {
-                    *reinterpret_cast<double*>(regResult) =
-                        *reinterpret_cast<double*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<double*>(regResult) = *reinterpret_cast<
+                        double*>(m_CPU.regs[register_sp].p);
                     break;
                 }
 
                 case cast_float:
                 {
-                    *reinterpret_cast<float*>(regResult) =
-                        *reinterpret_cast<float*>(m_CPU.regs[register_sp].p);
+                    *reinterpret_cast<float*>(regResult) = *reinterpret_cast<
+                        float*>(m_CPU.regs[register_sp].p);
                     break;
                 }
             }
@@ -7323,8 +7192,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint8_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -7345,8 +7214,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -7359,15 +7228,15 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint16_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -7381,8 +7250,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -7395,37 +7264,36 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint32_t*>(regResult) = static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -7439,8 +7307,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -7453,59 +7321,57 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(regResult) =
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<uint32_t*>(
+                                regResult) = *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) = *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<uint64_t*>(
+                                regResult) = *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) = static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(regResult) =
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<uint64_t*>(regResult) = static_cast<
+                                uint64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -7518,8 +7384,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int8_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -7540,8 +7406,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -7554,15 +7420,15 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int16_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
                     }
@@ -7576,8 +7442,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -7590,37 +7456,36 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int32_t*>(
+                                regResult) = *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(regResult) =
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int32_t*>(regResult) = static_cast<
+                                int32_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
                     }
@@ -7634,8 +7499,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<uint8_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<uint8_t*>(intmax);
                             break;
                         }
 
@@ -7648,59 +7513,57 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<uint16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<uint16_t*>(intmax);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<int16_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<int16_t*>(intmax);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<uint32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<uint32_t*>(intmax);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<int32_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<int32_t*>(intmax);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<uint64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<uint64_t*>(intmax);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                *reinterpret_cast<int64_t*>(intmax);
+                            *reinterpret_cast<int64_t*>(
+                                regResult) = *reinterpret_cast<int64_t*>(intmax);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) = static_cast<
+                                int64_t>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(regResult) =
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(intmax));
+                            *reinterpret_cast<int64_t*>(regResult) = static_cast<
+                                int64_t>(*reinterpret_cast<double*>(intmax));
                             break;
                         }
                     }
@@ -7714,73 +7577,64 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<uint64_t*>(intmax));
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int64_t*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<int64_t*>(intmax));
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<double*>(regResult) =
-                                static_cast<double>(
-                                    *reinterpret_cast<float*>(intmax));
+                            *reinterpret_cast<double*>(regResult) = static_cast<
+                                double>(*reinterpret_cast<float*>(intmax));
                             break;
                         }
 
@@ -7801,49 +7655,43 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<uint8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<uint8_t*>(intmax));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<int8_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<int8_t*>(intmax));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<uint16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<uint16_t*>(intmax));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<int16_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<int16_t*>(intmax));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<uint32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<uint32_t*>(intmax));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<float*>(regResult) =
-                                static_cast<float>(
-                                    *reinterpret_cast<int32_t*>(intmax));
+                            *reinterpret_cast<float*>(regResult) = static_cast<
+                                float>(*reinterpret_cast<int32_t*>(intmax));
                             break;
                         }
 
@@ -7896,8 +7744,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint8_t*>(intmax) =
-                                *reinterpret_cast<uint8_t*>(regResult);
+                            *reinterpret_cast<uint8_t*>(
+                                intmax) = *reinterpret_cast<uint8_t*>(regResult);
                             break;
                         }
 
@@ -7918,8 +7766,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint16_t*>(intmax) =
-                                *reinterpret_cast<uint8_t*>(regResult);
+                            *reinterpret_cast<uint16_t*>(
+                                intmax) = *reinterpret_cast<uint8_t*>(regResult);
                             break;
                         }
 
@@ -7932,15 +7780,15 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint16_t*>(intmax) =
-                                *reinterpret_cast<uint16_t*>(regResult);
+                            *reinterpret_cast<uint16_t*>(
+                                intmax) = *reinterpret_cast<uint16_t*>(regResult);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint16_t*>(intmax) =
-                                *reinterpret_cast<int16_t*>(regResult);
+                            *reinterpret_cast<uint16_t*>(
+                                intmax) = *reinterpret_cast<int16_t*>(regResult);
                             break;
                         }
                     }
@@ -7954,8 +7802,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<uint8_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<uint8_t*>(regResult);
                             break;
                         }
 
@@ -7968,37 +7816,36 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<uint16_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<uint16_t*>(regResult);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<int16_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<int16_t*>(regResult);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<uint32_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<uint32_t*>(regResult);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<int32_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<int32_t*>(regResult);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                static_cast<uint32_t>(
-                                    *reinterpret_cast<float*>(regResult));
+                            *reinterpret_cast<uint32_t*>(intmax) = static_cast<
+                                uint32_t>(*reinterpret_cast<float*>(regResult));
                             break;
                         }
                     }
@@ -8012,8 +7859,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<uint8_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<uint8_t*>(regResult);
                             break;
                         }
 
@@ -8026,59 +7873,58 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<uint16_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<uint16_t*>(regResult);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<int16_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<int16_t*>(regResult);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<uint32_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<uint32_t*>(regResult);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<uint32_t*>(intmax) =
-                                *reinterpret_cast<int32_t*>(regResult);
+                            *reinterpret_cast<uint32_t*>(
+                                intmax) = *reinterpret_cast<int32_t*>(regResult);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<uint64_t*>(intmax) =
-                                *reinterpret_cast<uint64_t*>(regResult);
+                            *reinterpret_cast<uint64_t*>(
+                                intmax) = *reinterpret_cast<uint64_t*>(regResult);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<uint64_t*>(intmax) =
-                                *reinterpret_cast<int64_t*>(regResult);
+                            *reinterpret_cast<uint64_t*>(
+                                intmax) = *reinterpret_cast<int64_t*>(regResult);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<uint64_t*>(intmax) =
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<float*>(regResult));
+                            *reinterpret_cast<uint64_t*>(intmax) = static_cast<
+                                uint64_t>(*reinterpret_cast<float*>(regResult));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<uint64_t*>(intmax) =
-                                static_cast<uint64_t>(
-                                    *reinterpret_cast<double*>(regResult));
+                            *reinterpret_cast<uint64_t*>(intmax) = static_cast<
+                                uint64_t>(
+                                *reinterpret_cast<double*>(regResult));
                             break;
                         }
                     }
@@ -8091,8 +7937,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int8_t*>(intmax) =
-                                *reinterpret_cast<uint8_t*>(regResult);
+                            *reinterpret_cast<int8_t*>(
+                                intmax) = *reinterpret_cast<uint8_t*>(regResult);
                             break;
                         }
 
@@ -8113,8 +7959,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int16_t*>(intmax) =
-                                *reinterpret_cast<uint8_t*>(regResult);
+                            *reinterpret_cast<int16_t*>(
+                                intmax) = *reinterpret_cast<uint8_t*>(regResult);
                             break;
                         }
 
@@ -8127,15 +7973,15 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int16_t*>(intmax) =
-                                *reinterpret_cast<uint16_t*>(regResult);
+                            *reinterpret_cast<int16_t*>(
+                                intmax) = *reinterpret_cast<uint16_t*>(regResult);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int16_t*>(intmax) =
-                                *reinterpret_cast<int16_t*>(regResult);
+                            *reinterpret_cast<int16_t*>(
+                                intmax) = *reinterpret_cast<int16_t*>(regResult);
                             break;
                         }
                     }
@@ -8149,8 +7995,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int32_t*>(intmax) =
-                                *reinterpret_cast<uint8_t*>(regResult);
+                            *reinterpret_cast<int32_t*>(
+                                intmax) = *reinterpret_cast<uint8_t*>(regResult);
                             break;
                         }
 
@@ -8163,37 +8009,36 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int32_t*>(intmax) =
-                                *reinterpret_cast<uint16_t*>(regResult);
+                            *reinterpret_cast<int32_t*>(
+                                intmax) = *reinterpret_cast<uint16_t*>(regResult);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int32_t*>(intmax) =
-                                *reinterpret_cast<int16_t*>(regResult);
+                            *reinterpret_cast<int32_t*>(
+                                intmax) = *reinterpret_cast<int16_t*>(regResult);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int32_t*>(intmax) =
-                                *reinterpret_cast<uint32_t*>(regResult);
+                            *reinterpret_cast<int32_t*>(
+                                intmax) = *reinterpret_cast<uint32_t*>(regResult);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int32_t*>(intmax) =
-                                *reinterpret_cast<int32_t*>(regResult);
+                            *reinterpret_cast<int32_t*>(
+                                intmax) = *reinterpret_cast<int32_t*>(regResult);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int32_t*>(intmax) =
-                                static_cast<int32_t>(
-                                    *reinterpret_cast<float*>(regResult));
+                            *reinterpret_cast<int32_t*>(intmax) = static_cast<
+                                int32_t>(*reinterpret_cast<float*>(regResult));
                             break;
                         }
                     }
@@ -8207,8 +8052,8 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<int64_t*>(intmax) =
-                                *reinterpret_cast<uint8_t*>(regResult);
+                            *reinterpret_cast<int64_t*>(
+                                intmax) = *reinterpret_cast<uint8_t*>(regResult);
                             break;
                         }
 
@@ -8221,59 +8066,57 @@ namespace vm
 
                         case cast_16:
                         {
-                            *reinterpret_cast<int64_t*>(intmax) =
-                                *reinterpret_cast<uint16_t*>(regResult);
+                            *reinterpret_cast<int64_t*>(
+                                intmax) = *reinterpret_cast<uint16_t*>(regResult);
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<int64_t*>(intmax) =
-                                *reinterpret_cast<int16_t*>(regResult);
+                            *reinterpret_cast<int64_t*>(
+                                intmax) = *reinterpret_cast<int16_t*>(regResult);
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<int64_t*>(intmax) =
-                                *reinterpret_cast<uint32_t*>(regResult);
+                            *reinterpret_cast<int64_t*>(
+                                intmax) = *reinterpret_cast<uint32_t*>(regResult);
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<int64_t*>(intmax) =
-                                *reinterpret_cast<int32_t*>(regResult);
+                            *reinterpret_cast<int64_t*>(
+                                intmax) = *reinterpret_cast<int32_t*>(regResult);
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<int64_t*>(intmax) =
-                                *reinterpret_cast<uint64_t*>(regResult);
+                            *reinterpret_cast<int64_t*>(
+                                intmax) = *reinterpret_cast<uint64_t*>(regResult);
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<int64_t*>(intmax) =
-                                *reinterpret_cast<int64_t*>(regResult);
+                            *reinterpret_cast<int64_t*>(
+                                intmax) = *reinterpret_cast<int64_t*>(regResult);
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<int64_t*>(intmax) =
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<float*>(regResult));
+                            *reinterpret_cast<int64_t*>(intmax) = static_cast<
+                                int64_t>(*reinterpret_cast<float*>(regResult));
                             break;
                         }
 
                         case cast_double:
                         {
-                            *reinterpret_cast<int64_t*>(intmax) =
-                                static_cast<int64_t>(
-                                    *reinterpret_cast<double*>(regResult));
+                            *reinterpret_cast<int64_t*>(intmax) = static_cast<
+                                int64_t>(*reinterpret_cast<double*>(regResult));
                             break;
                         }
                     }
@@ -8287,73 +8130,67 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<double*>(intmax) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint8_t*>(regResult));
+                            *reinterpret_cast<double*>(intmax) = static_cast<
+                                double>(*reinterpret_cast<uint8_t*>(regResult));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<double*>(intmax) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int8_t*>(regResult));
+                            *reinterpret_cast<double*>(intmax) = static_cast<
+                                double>(*reinterpret_cast<int8_t*>(regResult));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<double*>(intmax) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint16_t*>(regResult));
+                            *reinterpret_cast<double*>(intmax) = static_cast<
+                                double>(
+                                *reinterpret_cast<uint16_t*>(regResult));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<double*>(intmax) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int16_t*>(regResult));
+                            *reinterpret_cast<double*>(intmax) = static_cast<
+                                double>(*reinterpret_cast<int16_t*>(regResult));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<double*>(intmax) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint32_t*>(regResult));
+                            *reinterpret_cast<double*>(intmax) = static_cast<
+                                double>(
+                                *reinterpret_cast<uint32_t*>(regResult));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<double*>(intmax) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int32_t*>(regResult));
+                            *reinterpret_cast<double*>(intmax) = static_cast<
+                                double>(*reinterpret_cast<int32_t*>(regResult));
                             break;
                         }
 
                         case cast_64:
                         {
-                            *reinterpret_cast<double*>(intmax) =
-                                static_cast<double>(
-                                    *reinterpret_cast<uint64_t*>(regResult));
+                            *reinterpret_cast<double*>(intmax) = static_cast<
+                                double>(
+                                *reinterpret_cast<uint64_t*>(regResult));
                             break;
                         }
 
                         case cast_64_s:
                         {
-                            *reinterpret_cast<double*>(intmax) =
-                                static_cast<double>(
-                                    *reinterpret_cast<int64_t*>(regResult));
+                            *reinterpret_cast<double*>(intmax) = static_cast<
+                                double>(*reinterpret_cast<int64_t*>(regResult));
                             break;
                         }
 
                         case cast_float:
                         {
-                            *reinterpret_cast<double*>(intmax) =
-                                static_cast<double>(
-                                    *reinterpret_cast<float*>(regResult));
+                            *reinterpret_cast<double*>(intmax) = static_cast<
+                                double>(*reinterpret_cast<float*>(regResult));
                             break;
                         }
 
@@ -8374,49 +8211,43 @@ namespace vm
                     {
                         case cast_8:
                         {
-                            *reinterpret_cast<float*>(intmax) =
-                                static_cast<float>(
-                                    *reinterpret_cast<uint8_t*>(regResult));
+                            *reinterpret_cast<float*>(intmax) = static_cast<
+                                float>(*reinterpret_cast<uint8_t*>(regResult));
                             break;
                         }
 
                         case cast_8_s:
                         {
-                            *reinterpret_cast<float*>(intmax) =
-                                static_cast<float>(
-                                    *reinterpret_cast<int8_t*>(regResult));
+                            *reinterpret_cast<float*>(intmax) = static_cast<
+                                float>(*reinterpret_cast<int8_t*>(regResult));
                             break;
                         }
 
                         case cast_16:
                         {
-                            *reinterpret_cast<float*>(intmax) =
-                                static_cast<float>(
-                                    *reinterpret_cast<uint16_t*>(regResult));
+                            *reinterpret_cast<float*>(intmax) = static_cast<
+                                float>(*reinterpret_cast<uint16_t*>(regResult));
                             break;
                         }
 
                         case cast_16_s:
                         {
-                            *reinterpret_cast<float*>(intmax) =
-                                static_cast<float>(
-                                    *reinterpret_cast<int16_t*>(regResult));
+                            *reinterpret_cast<float*>(intmax) = static_cast<
+                                float>(*reinterpret_cast<int16_t*>(regResult));
                             break;
                         }
 
                         case cast_32:
                         {
-                            *reinterpret_cast<float*>(intmax) =
-                                static_cast<float>(
-                                    *reinterpret_cast<uint32_t*>(regResult));
+                            *reinterpret_cast<float*>(intmax) = static_cast<
+                                float>(*reinterpret_cast<uint32_t*>(regResult));
                             break;
                         }
 
                         case cast_32_s:
                         {
-                            *reinterpret_cast<float*>(intmax) =
-                                static_cast<float>(
-                                    *reinterpret_cast<int32_t*>(regResult));
+                            *reinterpret_cast<float*>(intmax) = static_cast<
+                                float>(*reinterpret_cast<int32_t*>(regResult));
                             break;
                         }
 
@@ -8622,7 +8453,7 @@ namespace vm
 
             if (typeFirst != typeSecond)
             {
-                static_assert("Can't compare two different types.");
+                assert("Can't compare two different types.");
             }
             else
             {
@@ -8630,81 +8461,90 @@ namespace vm
                 {
                     case cast_8:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint8_t*>(intmax1) ==
-                            *reinterpret_cast<uint8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint8_t*>(intmax1) ==
+                                             *reinterpret_cast<uint8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint16_t*>(intmax1) ==
-                            *reinterpret_cast<uint16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint16_t*>(intmax1) ==
+                                             *reinterpret_cast<uint16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint32_t*>(intmax1) ==
-                            *reinterpret_cast<uint32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint32_t*>(intmax1) ==
+                                             *reinterpret_cast<uint32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint64_t*>(intmax1) ==
-                            *reinterpret_cast<uint64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint64_t*>(intmax1) ==
+                                             *reinterpret_cast<uint64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_8_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int8_t*>(intmax1) ==
-                            *reinterpret_cast<int8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int8_t*>(intmax1) ==
+                                             *reinterpret_cast<int8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int16_t*>(intmax1) ==
-                            *reinterpret_cast<int16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int16_t*>(intmax1) ==
+                                             *reinterpret_cast<int16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int32_t*>(intmax1) ==
-                            *reinterpret_cast<int32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int32_t*>(intmax1) ==
+                                             *reinterpret_cast<int32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int64_t*>(intmax1) ==
-                            *reinterpret_cast<int64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int64_t*>(intmax1) ==
+                                             *reinterpret_cast<int64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_double:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<double*>(intmax1) ==
-                            *reinterpret_cast<double*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<double*>(intmax1) ==
+                                             *reinterpret_cast<double*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_float:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<float*>(intmax1) ==
-                            *reinterpret_cast<float*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<float*>(intmax1) ==
+                                             *reinterpret_cast<float*>(intmax2);
                         break;
                     }
                 }
@@ -8782,7 +8622,7 @@ namespace vm
 
             if (typeFirst != typeSecond)
             {
-                static_assert("Can't compare two different types.");
+                assert("Can't compare two different types.");
             }
             else
             {
@@ -8790,81 +8630,90 @@ namespace vm
                 {
                     case cast_8:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint8_t*>(intmax1) <
-                            *reinterpret_cast<uint8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint8_t*>(intmax1) <
+                                             *reinterpret_cast<uint8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint16_t*>(intmax1) <
-                            *reinterpret_cast<uint16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint16_t*>(intmax1) <
+                                             *reinterpret_cast<uint16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint32_t*>(intmax1) <
-                            *reinterpret_cast<uint32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint32_t*>(intmax1) <
+                                             *reinterpret_cast<uint32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint64_t*>(intmax1) <
-                            *reinterpret_cast<uint64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint64_t*>(intmax1) <
+                                             *reinterpret_cast<uint64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_8_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int8_t*>(intmax1) <
-                            *reinterpret_cast<int8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int8_t*>(intmax1) <
+                                             *reinterpret_cast<int8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int16_t*>(intmax1) <
-                            *reinterpret_cast<int16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int16_t*>(intmax1) <
+                                             *reinterpret_cast<int16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int32_t*>(intmax1) <
-                            *reinterpret_cast<int32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int32_t*>(intmax1) <
+                                             *reinterpret_cast<int32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int64_t*>(intmax1) <
-                            *reinterpret_cast<int64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int64_t*>(intmax1) <
+                                             *reinterpret_cast<int64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_double:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<double*>(intmax1) <
-                            *reinterpret_cast<double*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<double*>(intmax1) <
+                                             *reinterpret_cast<double*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_float:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<float*>(intmax1) <
-                            *reinterpret_cast<float*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<float*>(intmax1) <
+                                             *reinterpret_cast<float*>(intmax2);
                         break;
                     }
                 }
@@ -8942,7 +8791,7 @@ namespace vm
 
             if (typeFirst != typeSecond)
             {
-                static_assert("Can't compare two different types.");
+                assert("Can't compare two different types.");
             }
             else
             {
@@ -8950,81 +8799,90 @@ namespace vm
                 {
                     case cast_8:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint8_t*>(intmax1) <=
-                            *reinterpret_cast<uint8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint8_t*>(intmax1) <=
+                                             *reinterpret_cast<uint8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint16_t*>(intmax1) <=
-                            *reinterpret_cast<uint16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint16_t*>(intmax1) <=
+                                             *reinterpret_cast<uint16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint32_t*>(intmax1) <=
-                            *reinterpret_cast<uint32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint32_t*>(intmax1) <=
+                                             *reinterpret_cast<uint32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint64_t*>(intmax1) <=
-                            *reinterpret_cast<uint64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint64_t*>(intmax1) <=
+                                             *reinterpret_cast<uint64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_8_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int8_t*>(intmax1) <=
-                            *reinterpret_cast<int8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int8_t*>(intmax1) <=
+                                             *reinterpret_cast<int8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int16_t*>(intmax1) <=
-                            *reinterpret_cast<int16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int16_t*>(intmax1) <=
+                                             *reinterpret_cast<int16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int32_t*>(intmax1) <=
-                            *reinterpret_cast<int32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int32_t*>(intmax1) <=
+                                             *reinterpret_cast<int32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int64_t*>(intmax1) <=
-                            *reinterpret_cast<int64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int64_t*>(intmax1) <=
+                                             *reinterpret_cast<int64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_double:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<double*>(intmax1) <=
-                            *reinterpret_cast<double*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<double*>(intmax1) <=
+                                             *reinterpret_cast<double*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_float:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<float*>(intmax1) <=
-                            *reinterpret_cast<float*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<float*>(intmax1) <=
+                                             *reinterpret_cast<float*>(intmax2);
                         break;
                     }
                 }
@@ -9102,7 +8960,7 @@ namespace vm
 
             if (typeFirst != typeSecond)
             {
-                static_assert("Can't compare two different types.");
+                assert("Can't compare two different types.");
             }
             else
             {
@@ -9110,81 +8968,90 @@ namespace vm
                 {
                     case cast_8:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint8_t*>(intmax1) >
-                            *reinterpret_cast<uint8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint8_t*>(intmax1) >
+                                             *reinterpret_cast<uint8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint16_t*>(intmax1) >
-                            *reinterpret_cast<uint16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint16_t*>(intmax1) >
+                                             *reinterpret_cast<uint16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint32_t*>(intmax1) >
-                            *reinterpret_cast<uint32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint32_t*>(intmax1) >
+                                             *reinterpret_cast<uint32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint64_t*>(intmax1) >
-                            *reinterpret_cast<uint64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint64_t*>(intmax1) >
+                                             *reinterpret_cast<uint64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_8_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int8_t*>(intmax1) >
-                            *reinterpret_cast<int8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int8_t*>(intmax1) >
+                                             *reinterpret_cast<int8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int16_t*>(intmax1) >
-                            *reinterpret_cast<int16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int16_t*>(intmax1) >
+                                             *reinterpret_cast<int16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int32_t*>(intmax1) >
-                            *reinterpret_cast<int32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int32_t*>(intmax1) >
+                                             *reinterpret_cast<int32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int64_t*>(intmax1) >
-                            *reinterpret_cast<int64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int64_t*>(intmax1) >
+                                             *reinterpret_cast<int64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_double:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<double*>(intmax1) >
-                            *reinterpret_cast<double*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<double*>(intmax1) >
+                                             *reinterpret_cast<double*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_float:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<float*>(intmax1) >
-                            *reinterpret_cast<float*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<float*>(intmax1) >
+                                             *reinterpret_cast<float*>(intmax2);
                         break;
                     }
                 }
@@ -9262,7 +9129,7 @@ namespace vm
 
             if (typeFirst != typeSecond)
             {
-                static_assert("Can't compare two different types.");
+                assert("Can't compare two different types.");
             }
             else
             {
@@ -9270,81 +9137,90 @@ namespace vm
                 {
                     case cast_8:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint8_t*>(intmax1) >=
-                            *reinterpret_cast<uint8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint8_t*>(intmax1) >=
+                                             *reinterpret_cast<uint8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint16_t*>(intmax1) >=
-                            *reinterpret_cast<uint16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint16_t*>(intmax1) >=
+                                             *reinterpret_cast<uint16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint32_t*>(intmax1) >=
-                            *reinterpret_cast<uint32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint32_t*>(intmax1) >=
+                                             *reinterpret_cast<uint32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<uint64_t*>(intmax1) >=
-                            *reinterpret_cast<uint64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<uint64_t*>(intmax1) >=
+                                             *reinterpret_cast<uint64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_8_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int8_t*>(intmax1) >=
-                            *reinterpret_cast<int8_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int8_t*>(intmax1) >=
+                                             *reinterpret_cast<int8_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_16_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int16_t*>(intmax1) >=
-                            *reinterpret_cast<int16_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int16_t*>(intmax1) >=
+                                             *reinterpret_cast<int16_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_32_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int32_t*>(intmax1) >=
-                            *reinterpret_cast<int32_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int32_t*>(intmax1) >=
+                                             *reinterpret_cast<int32_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_64_s:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<int64_t*>(intmax1) >=
-                            *reinterpret_cast<int64_t*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<int64_t*>(intmax1) >=
+                                             *reinterpret_cast<int64_t*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_double:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<double*>(intmax1) >=
-                            *reinterpret_cast<double*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<double*>(intmax1) >=
+                                             *reinterpret_cast<double*>(
+                                                 intmax2);
                         break;
                     }
 
                     case cast_float:
                     {
-                        *reinterpret_cast<bool*>(regBoolResult) =
-                            *reinterpret_cast<float*>(intmax1) >=
-                            *reinterpret_cast<float*>(intmax2);
+                        *reinterpret_cast<bool*>(
+                            regBoolResult) = *reinterpret_cast<float*>(intmax1) >=
+                                             *reinterpret_cast<float*>(intmax2);
                         break;
                     }
                 }
@@ -9428,7 +9304,7 @@ namespace vm
                 // Check for errors.
                 if (!checkCode() || !checkStacks())
                 {
-                    static_assert("Exceeding stacks or code.");
+                    assert("Exceeding stacks or code.");
                     bExit = true;
                     break;
                 }
@@ -9528,8 +9404,8 @@ namespace vm
                     case inst_jmp:
                     {
                         auto regResult = readReg();
-                        m_CPU.regs[register_ip].p =
-                            *reinterpret_cast<rt<reg_pointer>*>(regResult);
+                        m_CPU.regs[register_ip]
+                            .p = *reinterpret_cast<rt<reg_pointer>*>(regResult);
                         break;
                     }
 
@@ -9537,8 +9413,8 @@ namespace vm
                     {
                         auto regResult = readReg();
                         auto savedIp = m_CPU.regs[register_ip].p;
-                        m_CPU.regs[register_ip].p =
-                            *reinterpret_cast<rt<reg_pointer>*>(regResult);
+                        m_CPU.regs[register_ip]
+                            .p = *reinterpret_cast<rt<reg_pointer>*>(regResult);
                         *reinterpret_cast<uintptr_t*>(
                             m_CPU.regs[register_cp].p) = savedIp;
                         // Save ip this time into the call stack.
@@ -9552,9 +9428,9 @@ namespace vm
                         // the call stack
                         m_CPU.regs[register_cp].p -= sizeof(
                             m_CPU.regs[register_ip].p);
-                        m_CPU.regs[register_ip].p =
-                            *reinterpret_cast<uintptr_t*>(
-                                m_CPU.regs[register_cp].p);
+                        m_CPU.regs[register_ip]
+                            .p = *reinterpret_cast<uintptr_t*>(
+                            m_CPU.regs[register_cp].p);
                         break;
                     }
 

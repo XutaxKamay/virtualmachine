@@ -111,7 +111,7 @@ namespace vm
         }
         else
         {
-            static_assert("Creating empty program");
+            assert("Creating empty program");
         }
 
         return binaryProgram;
