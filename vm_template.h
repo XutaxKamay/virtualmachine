@@ -28,6 +28,10 @@
 
 namespace vm
 {
+    ///
+    /// \brief default_ram_size
+    /// Default ram's size of the virtual machine.
+    ///
     constexpr auto default_ram_size = 0x100000;
 
     using ptr_t = void*;
@@ -45,6 +49,10 @@ namespace vm
     template <typename type_t>
     inline constexpr type_wrapper_t<type_t> get_type {};
 
+    ///
+    /// \brief The instructions_t enum
+    /// Type of instructions that can be ran on the virtual CPU.
+    ///
     enum instructions_t : byte_t
     {
         // Mathematical expressions.
@@ -90,6 +98,10 @@ namespace vm
         inst_max
     };
 
+    ///
+    /// \brief The register_cast_type_t enum
+    /// Into what type we should cast the register or value.
+    ///
     enum register_cast_type_t : byte_t
     {
         cast_float,
@@ -102,11 +114,14 @@ namespace vm
         cast_16_s,
         cast_32_s,
         cast_64_s,
-        cast_pointer,
         cast_max
     };
 
-    // What kind of operation is applied on, on value or on register.
+    ///
+    /// \brief The operation_type_t enum
+    /// What kind of operation is applied on the virtual CPU,
+    /// on value or on register.
+    ///
     enum operation_type_t : byte_t
     {
         op_value,
@@ -114,7 +129,10 @@ namespace vm
         op_max
     };
 
-    // Let's create some registers type for each data types.
+    ///
+    /// \brief The register_type_t enum
+    /// Let's create some registers type for each data types.
+    ///
     enum register_type_t : byte_t
     {
         reg_8,
@@ -132,7 +150,10 @@ namespace vm
         reg_count_max
     };
 
-    // Number of storage registers.
+    ///
+    /// \brief The register_t enum
+    /// Type of registers.
+    ///
     enum register_t : byte_t
     {
         // Temporary registers.
@@ -157,6 +178,10 @@ namespace vm
         num_of_registers
     };
 
+    ///
+    /// \brief The register_storage_slot_t enum
+    /// What should the virtual CPU t
+    ///
     enum register_storage_slot_t : byte_t
     {
         slot_1_byte,
@@ -338,7 +363,6 @@ namespace vm
     class Compiler
     {
      public:
-            
     };
 
     template <size_t ram_size = default_ram_size>
@@ -357,12 +381,7 @@ namespace vm
             rt<reg_16_s> s_s[4];
             rt<reg_32_s> i_s[2];
             rt<reg_64_s> l_s;
-            // TODO: support 32 bits.
-#ifdef ENVIRONMENT64
             rt<reg_pointer> p;
-#else
-            rt<reg_pointer> p[2];
-#endif
             rt<reg_float> f[2];
             rt<reg_double> d;
             rt<reg_max> m;

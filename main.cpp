@@ -14,7 +14,6 @@ auto main() -> int
     instructions.push_back(op_value);
     instructions.push_back(cast_32);
 
-
     std::vector<byte_t> int_value;
     int_value.resize(sizeof(int));
     *reinterpret_cast<int*>(int_value.data()) = 1337;
@@ -46,7 +45,9 @@ auto main() -> int
     if (vm.m_CPU.regs[register_ret].i[0] == 1337)
     {
         std::cout << "Very good mister Freeman" << std::endl;
-        std::cout << vm.m_CPU.regs[register_storage_temp2].b[0] << std::endl;
+        std::cout << static_cast<int>(
+                         vm.m_CPU.regs[register_storage_temp2].b[0])
+                  << std::endl;
     }
 
     return 0;
